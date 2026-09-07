@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS threads (
   needs_review INTEGER NOT NULL DEFAULT 0,
   msg_count    INTEGER NOT NULL DEFAULT 0,
   human_until      TEXT,                              -- relevo humano vigente; NULL = contesta el agente
+  human_by         TEXT,                              -- nombre del usuario que tomó el hilo
   last_notified_at TEXT,                              -- enfriamiento de los avisos por correo
   first_seen   TEXT NOT NULL DEFAULT (datetime('now')),
   last_seen    TEXT NOT NULL DEFAULT (datetime('now'))
@@ -66,7 +67,42 @@ CREATE TABLE IF NOT EXISTS messages (
   dispatch    TEXT,                                   -- ok | ack | no_handler | error:...
   direction   TEXT NOT NULL DEFAULT 'in',             -- in | out
   author      TEXT,                                   -- agent | human | ack | error
+  sent_by     TEXT,                                   -- nombre del usuario (author = human)
+  media_key   TEXT,                                   -- archivo en R2 (ver media.ts); body = caption
+  media_mime  TEXT,
+  media_name  TEXT,
+  media_size  INTEGER,
   created_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS messages_phone_idx ON messages(phone10, created_at DESC);
 CREATE INDEX IF NOT EXISTS messages_tenant_idx ON messages(tenant_slug, created_at DESC);
+
+-- Usuarios de la bandeja (/inbox). Cada quien con su cuenta; el ADMIN_TOKEN queda solo
+-- para la API de operación y para crear el primer usuario.
+CREATE TABLE IF NOT EXISTS users (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  email         TEXT NOT NULL UNIQUE,                -- siempre en minúsculas
+  name          TEXT NOT NULL,
+  password_hash TEXT NOT NULL,                       -- pbkdf2$iter$salt$hash (base64)
+  role          TEXT NOT NULL DEFAULT 'agente',      -- admin | agente
+  active        INTEGER NOT NULL DEFAULT 1,
+  created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  last_login_at TEXT
+);
+
+-- Sesiones por cookie. Se guarda el SHA-256 del token, nunca el token.
+CREATE TABLE IF NOT EXISTS sessions (
+  token_hash  TEXT PRIMARY KEY,
+  user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+  last_used   TEXT NOT NULL DEFAULT (datetime('now')),
+  expires_at  TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS sessions_user_idx ON sessions(user_id);
+
+-- Intentos fallidos de login (freno a fuerza bruta).
+CREATE TABLE IF NOT EXISTS login_attempts (
+  email TEXT NOT NULL,
+  at    TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS login_attempts_idx ON login_attempts(email, at);

@@ -22,8 +22,15 @@
       "database_id": "23487f72-e117-4619-95e5-28f2ffa7b90b"
     }
   ],
+  // Fotos y documentos entrantes, DE PASO. El portal del cliente los copia a su propio
+  // R2 con la URL firmada del despacho; aquí una regla de ciclo de vida borra `t/` a
+  // los 90 días (`lead/` se queda: los leads no tienen otro lugar). Ver src/media.ts.
+  //   npx wrangler r2 bucket create tratto-wa-media
+  //   npx wrangler r2 bucket lifecycle add tratto-wa-media --prefix t/ --expire-days 90
+  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "tratto-wa-media" }],
   "vars": {
     "ENVIRONMENT": "prod",
+    "PUBLIC_URL": "https://wa.usetratto.com",
     // Avisos por correo. Solo se manda cuando hace falta una PERSONA: lead nuevo,
     // el agente falló, o el hilo está en relevo humano. Todo lo demás lo resuelve
     // el agente y no merece interrumpir a nadie. Ver src/notify.ts.

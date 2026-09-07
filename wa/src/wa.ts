@@ -41,6 +41,36 @@ export async function sendText(env: Env, to: string, body: string): Promise<void
   await graphPost(env, { to: normalizeMxTo(to), type: 'text', text: { body: body.slice(0, 4000) } });
 }
 
+/**
+ * Un archivo entrante, en dos viajes: el media_id da una URL de CDN que caduca en
+ * minutos, y esa URL solo entrega los bytes con el mismo Bearer. Se devuelve el
+ * stream sin bufferear: un documento puede pesar hasta 100 MB.
+ */
+export async function fetchMedia(
+  env: Env, mediaId: string,
+): Promise<{ body: ReadableStream | ArrayBuffer; mime: string | null; size: number | null }> {
+  if (!env.WHATSAPP_TOKEN) throw new Error('WHATSAPP_TOKEN sin configurar');
+  const auth = { Authorization: `Bearer ${env.WHATSAPP_TOKEN}` };
+
+  const meta = await fetch(`${GRAPH}/${encodeURIComponent(mediaId)}`, { headers: auth });
+  if (!meta.ok) {
+    const detail = await meta.text().catch(() => '');
+    throw new Error(`media ${mediaId}: Graph respondió ${meta.status}: ${detail.slice(0, 200)}`);
+  }
+  const info = await meta.json<{ url?: string; mime_type?: string; file_size?: number }>();
+  if (!info.url) throw new Error(`media ${mediaId}: Graph no devolvió url`);
+
+  const file = await fetch(info.url, { headers: auth });
+  if (!file.ok || !file.body) {
+    throw new Error(`media ${mediaId}: descarga respondió ${file.status}`);
+  }
+  // R2 necesita saber el largo para recibir un stream; Meta manda content-length,
+  // pero si un día no viniera se bufferea en vez de fallar.
+  const len = file.headers.get('content-length');
+  const body = len ? file.body : await file.arrayBuffer();
+  return { body, mime: info.mime_type ?? file.headers.get('content-type'), size: len ? Number(len) : null };
+}
+
 /** Palomitas azules. Cosmético: nunca truena. */
 export async function markRead(env: Env, messageId: string): Promise<void> {
   try {

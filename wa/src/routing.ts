@@ -2,12 +2,15 @@
 import type { Env } from './env';
 import { hmacHex } from './crypto';
 import { phone10 } from './wa';
+import { signedUrl, type MediaRef, type StoredMedia } from './media';
 
 export interface Incoming {
   waId: string;
   from: string;          // como lo manda Meta
-  kind: string;          // text | image | audio | ...
-  text: string | null;
+  kind: string;          // text | image | document | audio | video | sticker | ...
+  text: string | null;   // en media: el caption, si lo hubo
+  media: MediaRef | null;      // lo que dice Meta que hay
+  stored: StoredMedia | null;  // lo que ya quedó en R2 (se llena antes de despachar)
   profileName: string | null;
   timestamp: string | null;
   raw: unknown;
@@ -139,27 +142,33 @@ export async function touchThread(env: Env, msg: Incoming, r: Resolution): Promi
 export async function logMessage(
   env: Env, msg: Incoming, r: Resolution, dispatch: string,
 ): Promise<void> {
+  const s = msg.stored;
   await env.DB.prepare(
-    `INSERT INTO messages (wa_id, phone10, wa_from, tenant_slug, resolved_by, kind, body, raw, dispatch, direction)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'in')`,
+    `INSERT INTO messages (wa_id, phone10, wa_from, tenant_slug, resolved_by, kind, body, raw, dispatch, direction,
+                           media_key, media_mime, media_name, media_size)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'in', ?, ?, ?, ?)`,
   ).bind(
     msg.waId, r.phone10, msg.from, r.tenant?.slug ?? null, r.resolvedBy,
     msg.kind, msg.text, JSON.stringify(msg.raw), dispatch,
+    s?.key ?? null, s?.mime ?? null, s?.filename ?? null, s?.size ?? null,
   ).run();
 }
 
 /** Lo que SALE. Sin esto la bandeja muestra preguntas sin respuestas. */
 export async function logOutbound(
   env: Env,
-  opts: { phone10: string; to: string; tenantSlug: string | null; body: string; author: string },
+  opts: {
+    phone10: string; to: string; tenantSlug: string | null; body: string; author: string;
+    sentBy?: string | null;   // nombre del usuario de la bandeja (author = human)
+  },
 ): Promise<void> {
   await env.DB.prepare(
-    `INSERT INTO messages (wa_id, phone10, wa_from, tenant_slug, resolved_by, kind, body, raw, dispatch, direction, author)
-     VALUES (?, ?, ?, ?, 'out', 'text', ?, ?, 'sent', 'out', ?)`,
+    `INSERT INTO messages (wa_id, phone10, wa_from, tenant_slug, resolved_by, kind, body, raw, dispatch, direction, author, sent_by)
+     VALUES (?, ?, ?, ?, 'out', 'text', ?, ?, 'sent', 'out', ?, ?)`,
   ).bind(
     `out.${Date.now()}.${Math.random().toString(36).slice(2, 8)}`,
     opts.phone10, opts.to, opts.tenantSlug, opts.body,
-    JSON.stringify({ to: opts.to, body: opts.body }), opts.author,
+    JSON.stringify({ to: opts.to, body: opts.body }), opts.author, opts.sentBy ?? null,
   ).run();
 }
 
@@ -188,6 +197,13 @@ export async function dispatchToTenant(
     return { status: 'no_handler', reply: tenant.ack_text };
   }
 
+  // `media` va null en texto, y también si Meta no nos dejó bajar el archivo: el
+  // portal ve por `kind` que había algo y decide qué hacer.
+  const s = msg.stored;
+  const media = s
+    ? { url: await signedUrl(env, s.key), mime: s.mime, filename: s.filename, size: s.size, sha256: s.sha256 }
+    : null;
+
   const payload = JSON.stringify({
     source: 'tratto-wa',
     tenant: tenant.slug,
@@ -197,6 +213,7 @@ export async function dispatchToTenant(
       phone10: r.phone10,
       kind: msg.kind,
       text: msg.text,
+      media,
       timestamp: msg.timestamp,
       profile_name: msg.profileName,
     },

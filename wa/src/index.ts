@@ -15,7 +15,8 @@ import {
 } from './routing';
 import { adminRoutes } from './admin';
 import { notify, type NotifyReason } from './notify';
-import { inboxPage } from './inbox';
+import { inboxRoutes } from './inbox';
+import { MEDIA_KINDS, serve as serveMedia, storeInbound, verifySignature, type MediaRef } from './media';
 
 const LEAD_REPLY =
   'Hola 👋 Gracias por escribir a Tratto. Ya quedó registrado tu mensaje y ' +
@@ -34,12 +35,25 @@ async function validSignature(env: Env, rawBody: string, header: string | null):
   return timingSafeEqual(expected, header.slice('sha256='.length).toLowerCase());
 }
 
+interface MetaMedia { id: string; mime_type: string; sha256?: string; filename?: string; caption?: string }
 interface MetaMessage {
   id: string;
   from: string;
   type: string;
   timestamp?: string;
   text?: { body: string };
+  image?: MetaMedia;
+  document?: MetaMedia;
+  audio?: MetaMedia;
+  video?: MetaMedia;
+  sticker?: MetaMedia;
+}
+
+function mediaOf(m: MetaMessage): MediaRef | null {
+  if (!MEDIA_KINDS.has(m.type)) return null;
+  const x = m[m.type as 'image' | 'document' | 'audio' | 'video' | 'sticker'];
+  if (!x?.id) return null;
+  return { id: x.id, mime: x.mime_type ?? '', sha256: x.sha256 ?? null, filename: x.filename ?? null };
 }
 interface MetaContact { wa_id?: string; profile?: { name?: string } }
 interface MetaBody {
@@ -61,11 +75,16 @@ function extract(body: MetaBody): Incoming[] {
         if (c.wa_id && c.profile?.name) names.set(c.wa_id, c.profile.name);
       }
       for (const m of value.messages) {
+        const media = mediaOf(m);
+        // El caption de una foto/documento va como texto: así el agente lo lee igual.
+        const caption = media ? (m[m.type as 'image']?.caption ?? null) : null;
         out.push({
           waId: m.id,
           from: m.from,
           kind: m.type,
-          text: m.type === 'text' ? (m.text?.body ?? null) : null,
+          text: m.type === 'text' ? (m.text?.body ?? null) : caption,
+          media,
+          stored: null,
           profileName: names.get(m.from) ?? null,
           timestamp: m.timestamp ?? null,
           raw: m,
@@ -92,6 +111,22 @@ async function processMessage(env: Env, msg: Incoming): Promise<void> {
   let author = 'ack';
   let detail: string | undefined;
 
+  // El archivo se baja ANTES de despachar: la URL firmada que va en el payload tiene
+  // que apuntar a algo que ya existe. Si Meta falla, el mensaje sigue su curso sin
+  // archivo y alguien recibe aviso; no se deja a la persona sin respuesta por eso.
+  let mediaError: string | undefined;
+  if (msg.media) {
+    try {
+      msg.stored = await storeInbound(env, {
+        kind: msg.kind, ref: msg.media, waId: msg.waId, phone10: r.phone10,
+        scope: r.tenant ? `t/${r.tenant.slug}` : 'lead',
+      });
+    } catch (err) {
+      console.error('media', msg.waId, err);
+      mediaError = String(err).slice(0, 300);
+    }
+  }
+
   if (humanHasIt) {
     status = 'humano';
     reply = null;
@@ -110,6 +145,11 @@ async function processMessage(env: Env, msg: Incoming): Promise<void> {
       reply = ERROR_REPLY;
       author = 'error';
     }
+  }
+
+  if (mediaError && !status.startsWith('error:')) {
+    status = `error:media ${mediaError.slice(0, 110)}`;
+    detail = detail ?? mediaError;
   }
 
   await logMessage(env, msg, r, status);
@@ -141,7 +181,7 @@ async function processMessage(env: Env, msg: Incoming): Promise<void> {
       waFrom: msg.from,
       profileName: msg.profileName,
       tenantSlug: r.tenant?.slug ?? null,
-      text: msg.text,
+      text: msg.text ?? (msg.media ? `(${msg.kind}${msg.stored ? `: ${msg.stored.filename}` : ''})` : null),
       detail,
     });
   }
@@ -184,14 +224,21 @@ export default {
       return new Response('ok');
     }
 
+    // Archivos para los portales: URL firmada con GATEWAY_SECRET y caducidad. La
+    // bandeja usa su propia puerta (/inbox/api/media/…) con sesión.
+    if (req.method === 'GET' && url.pathname.startsWith('/media/')) {
+      const key = decodeURIComponent(url.pathname.slice('/media/'.length));
+      if (!(await verifySignature(env, key, url.searchParams.get('exp'), url.searchParams.get('sig')))) {
+        return new Response('forbidden', { status: 403 });
+      }
+      return serveMedia(env, key);
+    }
+
     if (url.pathname.startsWith('/admin/')) return adminRoutes(req, env, url);
 
-    // La bandeja. El HTML no lleva secretos: pide el ADMIN_TOKEN al abrirse y todas
-    // sus llamadas van a /admin/* con Bearer, igual que curl.
-    if (req.method === 'GET' && (url.pathname === '/inbox' || url.pathname === '/inbox/')) {
-      return new Response(inboxPage(), {
-        headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' },
-      });
+    // La bandeja: página + login + API con sesión de usuario. Ver inbox.ts.
+    if (url.pathname === '/inbox' || url.pathname.startsWith('/inbox/')) {
+      return inboxRoutes(req, env, url);
     }
 
     if (url.pathname === '/health') {

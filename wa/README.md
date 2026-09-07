@@ -37,7 +37,9 @@ Quien sea → Meta Cloud API → POST https://wa.usetratto.com/wa/webhook
 | ✅ | WABA duplicada `1080570111289211` borrada — queda una sola, `2275720233183131` |
 | ⚠️ | Business verification pendiente → tope de 250 conversaciones nuevas/día y máx. 2 números |
 | 🗓️ | **1 oct 2026: Meta empieza a cobrar los mensajes de servicio.** Cada respuesta del agente es hoy gratis (lo son desde nov 2024) y pasa a costar por mensaje. También las plantillas de utilidad dentro de la ventana de 24 h. Afecta el precio de Tratto, no el código |
-| ✅ | Bandeja humana en `/inbox` + avisos por correo (lead nuevo · agente caído · relevo humano) |
+| ✅ | Bandeja humana en `/inbox` con cuentas propias (usuarios, roles, sesión) + avisos por correo (lead nuevo · agente caído · relevo humano) |
+| ✅ | Fotos/documentos/audios entrantes: se bajan a R2 al momento, se ven en la bandeja y van al portal como URL firmada (ver contrato) |
+| ⛔ | Falta crear el bucket `tratto-wa-media`, su regla de 90 días y aplicar `migrations/003_media.sql` en la D1 remota (comandos abajo) |
 | ⛔ | Falta el endpoint `/api/wa/inbound` en `janing-portal` (contrato abajo) |
 | ⛔ | Falta poblar `directory` con los teléfonos reales de Janing |
 
@@ -85,7 +87,8 @@ Cuando `tenants.inbound_url` está puesto, el gateway hace `POST` ahí:
   "tenant": "janing",
   "message": {
     "wa_id": "wamid.…", "from": "5215511112222", "phone10": "5511112222",
-    "kind": "text", "text": "…", "timestamp": "1757000000", "profile_name": "Ana"
+    "kind": "text", "text": "…", "media": null,
+    "timestamp": "1757000000", "profile_name": "Ana"
   },
   "contact": { "name": "Ana", "role": "compras", "resolved_by": "directory" }
 }
@@ -101,25 +104,89 @@ Para conectar Janing: implementar `POST /api/wa/inbound` en `janing-portal`
 (resolver la persona por `phone`, correr su agente contra su D1, devolver `reply`) y
 luego apuntar el tenant a esa URL.
 
+### Fotos, documentos, audios y videos
+
+Meta no manda el archivo en el webhook, manda un `media_id` cuya URL caduca en
+minutos. El gateway lo baja **al momento** y lo deja en el bucket R2 `tratto-wa-media`
+(`src/media.ts`). Con `kind` = `image` | `document` | `audio` | `video` | `sticker`
+el mensaje llega así (`text` lleva el caption, si lo hubo):
+
+```jsonc
+"message": {
+  "kind": "document", "text": "el plano que te dije",
+  "media": {
+    "url": "https://wa.usetratto.com/media/t/janing/5511112222/wamidHBg….pdf?exp=1757086400&sig=…",
+    "mime": "application/pdf", "filename": "plano.pdf", "size": 812331, "sha256": "…"
+  }
+}
+```
+
+- **El gateway es tránsito, no archivo.** La URL está firmada con `GATEWAY_SECRET`
+  y vale **24 h**. El portal que quiera quedarse el archivo hace `fetch(url)` y lo
+  guarda en **su propio** R2 al recibir el mensaje: son ~30 líneas iguales en cada
+  portal. La copia del gateway vive bajo `t/{tenant}/…` y una regla de ciclo de vida
+  la borra a los **90 días**. Los leads (`lead/…`) se quedan: no tienen otro lugar.
+- La firma cubre la key completa, prefijo de tenant incluido: un portal solo puede
+  bajar lo que se le despachó a él. Los portales **nunca** ven el `WHATSAPP_TOKEN`.
+- Si Meta no deja bajar el archivo, el mensaje se despacha igual con `media: null`
+  (por `kind` el portal sabe que había algo), queda `dispatch=error:media …` y llega
+  aviso por correo. Nunca se deja a la persona sin respuesta por eso.
+- Límites de WhatsApp: imagen 5 MB, audio/video 16 MB, documento 100 MB.
+- Mandar archivos **de regreso** (portal → persona) no existe todavía. Cuando haga
+  falta, el contrato es el mismo al revés: `{"reply": "…", "media": {"url", "mime",
+  "filename", "caption"}}` y el gateway lo sube a Meta.
+
+Una vez (bucket + retención):
+
+```sh
+npx wrangler r2 bucket create tratto-wa-media
+npx wrangler r2 bucket lifecycle add tratto-wa-media --prefix t/ --expire-days 90
+npx wrangler d1 execute tratto-wa --remote --file=migrations/003_media.sql
+```
+
 ## La bandeja (`/inbox`)
 
 Un número de Cloud API **no se puede abrir en la app de WhatsApp** — es la API o la
 app, nunca las dos. Así que la única ventana a las conversaciones es esta:
 
-`https://wa.usetratto.com/inbox` — pide el `ADMIN_TOKEN` al abrirse, lo guarda en el
-navegador y de ahí en adelante habla con `/admin/*` como cualquier `curl`. El HTML no
-lleva secretos: sin token no muestra nada.
+**https://wa.usetratto.com/inbox** — pensada para el celular (lista de chats →
+conversación, como WhatsApp) y a dos columnas en pantalla grande. En el cel conviene
+*Añadir a pantalla de inicio*: abre a pantalla completa con su ícono.
+
+**Cuentas.** Cada persona entra con su correo y contraseña (tabla `users`, PBKDF2,
+sesión por cookie HttpOnly de 30 días). Ya no se pega el `ADMIN_TOKEN` en el
+navegador: ese queda solo para la API de operación y para crear el primer usuario.
+
+- **Primer usuario:** al abrir `/inbox` sin cuentas, la página pide el `ADMIN_TOKEN`
+  (está en `.dev.vars`) + nombre, correo y contraseña. Esa cuenta queda como admin.
+- **Más usuarios:** menú ⋮ → *Usuarios* (solo admins): alta con contraseña inicial,
+  rol (`admin` | `agente`), baja, y resetear contraseña. Dar de baja o resetear cierra
+  las sesiones de esa persona. Cada quien cambia su contraseña desde ⋮ → *Cambiar
+  contraseña*.
+- **Rescate** si nadie puede entrar: `POST /admin/users` con el `ADMIN_TOKEN` (abajo).
+
+**Qué se ve.** Filtros *Todos · Por contestar · Leads*. Un hilo está "por contestar"
+cuando lo último que hay es un mensaje entrante y nadie más lo va a responder: es un
+lead (no tiene agente) o está en relevo humano. El punto verde y el contador en el
+título de la pestaña salen de ahí. Cada respuesta lleva el nombre de quien la mandó.
 
 **Relevo humano.** Si contestas a mano, `threads.human_until` se pone a 6 horas en el
-futuro y **el agente se calla** en ese hilo. Contestar los dos es peor que no contestar
-ninguno. Es una fecha y no un interruptor a propósito: se suelta solo, así que ningún
-hilo se queda mudo porque alguien olvidó reactivarlo. El botón *Devolver al agente* lo
-suelta antes.
+futuro (y `human_by` con tu nombre) y **el agente se calla** en ese hilo. Contestar
+los dos es peor que no contestar ninguno. Es una fecha y no un interruptor a
+propósito: se suelta solo, así que ningún hilo se queda mudo porque alguien olvidó
+reactivarlo. *Tomar* / *Devolver* en la cabecera lo hacen sin escribir.
 
 **Ventana de 24 h.** WhatsApp solo permite texto libre dentro de las 24 h desde el
-último mensaje de la persona. Pasado eso el compositor se bloquea y `/admin/send`
-devuelve `409`: fuera de la ventana solo van plantillas aprobadas, y esta cuenta no
-tiene ninguna.
+último mensaje de la persona. Pasado eso el compositor se bloquea y el envío devuelve
+`409`: fuera de la ventana solo van plantillas aprobadas, y esta cuenta no tiene
+ninguna.
+
+**Detalles del contacto** (⋮ en el hilo): re-rutear a un cliente, o marcar el
+seguimiento del lead (`nuevo` · `contactado` · `descartado`).
+
+**Avisos del navegador.** ⋮ → *Activar avisos*: con la pestaña en segundo plano avisa
+cuando entra algo por contestar. No es push real (el Worker no manda nada al
+navegador); para eso están los correos de abajo.
 
 ## Avisos por correo
 
@@ -179,6 +246,11 @@ curl "$B/admin/thread?phone=5511112222" -H "$H"
 # re-rutear a mano (lead que se volvió cliente, o ruteo mal resuelto)
 curl -X POST $B/admin/threads/assign -H "$H" -H 'content-type: application/json' \
   -d '{"phone":"5599998888","tenant":"janing"}'
+
+# usuarios de la bandeja — rescate: crear/resetear contraseña (cierra sus sesiones)
+curl -X POST $B/admin/users -H "$H" -H 'content-type: application/json' \
+  -d '{"email":"ana@ejemplo.com","name":"Ana","password":"al-menos-8","role":"admin"}'
+curl $B/admin/users -H "$H"
 ```
 
 ## Desarrollo
@@ -186,7 +258,7 @@ curl -X POST $B/admin/threads/assign -H "$H" -H 'content-type: application/json'
 ```sh
 npm install
 npm run typecheck
-npx wrangler d1 execute tratto-wa --local --file=schema.sql   # D1 local
+npx wrangler d1 execute tratto-wa --local --file=schema.sql   # D1 local (schema completo; las migrations/ son para la remota ya existente)
 npx wrangler dev --env-file=.dev.vars --port 8791
 ```
 

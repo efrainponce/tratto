@@ -1,6 +1,8 @@
 export interface Env {
   DB: D1Database;
+  MEDIA: R2Bucket;                  // fotos/documentos entrantes, de paso — ver media.ts
   ENVIRONMENT: string;
+  PUBLIC_URL?: string;              // base de las URLs firmadas que se dan a los portales
 
   // Correo. Se intenta el binding de Cloudflare primero; si no está (o el dominio
   // no está dado de alta en Email Sending) se cae a Resend. Con que exista uno basta.

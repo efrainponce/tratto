@@ -1,239 +1,233 @@
-// La bandeja. Una sola página, sin dependencias ni build: el Worker la sirve tal cual.
+// La bandeja (/inbox): rutas de sesión + API que usa la página. Cada persona entra
+// con su cuenta (tabla `users`); lo que hace sobre los hilos lleva su nombre.
 //
-// El HTML NO lleva secretos. Pide el ADMIN_TOKEN al abrirse, lo guarda en
-// localStorage del navegador y lo manda como Bearer en cada llamada a /admin/*,
-// exactamente igual que los curl del README. Así la página puede ser pública sin
-// exponer nada: sin token, no ve un solo mensaje.
-export function inboxPage(): string {
-  return `<!doctype html>
-<html lang="es">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bandeja · Tratto WhatsApp</title>
-<style>
-  :root {
-    color-scheme: light dark;
-    --bg:#fbfbfa; --panel:#fff; --line:#e6e6e3; --ink:#1c1c1a; --dim:#77776f;
-    --mine:#dcf8c6; --theirs:#fff; --accent:#128c7e; --warn:#b45309; --warnbg:#fef3c7;
+//   GET  /inbox                 la página (una sola, decide sola si pide login)
+//   GET  /inbox/manifest.json   para "añadir a pantalla de inicio" en el cel
+//   POST /inbox/setup           crear el PRIMER usuario (pide ADMIN_TOKEN)
+//   POST /inbox/login           correo + contraseña → cookie de sesión
+//   POST /inbox/logout
+//   *    /inbox/api/*           con sesión: hilos, mensajes, enviar, usuarios…
+import type { Env } from './env';
+import * as ops from './ops';
+import {
+  createSession, destroySession, hashPassword, login, normalizeEmail, passwordProblem,
+  sessionCookie, sessionToken, sessionUser, validEmail, verifyPassword, type User,
+} from './auth';
+import { inboxPage, inboxIcon } from './inbox-html';
+import { serve as serveMedia } from './media';
+
+const json = (body: unknown, status = 200, headers: Record<string, string> = {}) =>
+  Response.json(body, { status, headers });
+
+async function body<T>(req: Request): Promise<T | null> {
+  // Todo lo que muta viene como JSON desde la página. Exigir el content-type es un
+  // freno barato extra contra CSRF (un <form> no puede mandarlo).
+  if (!(req.headers.get('content-type') ?? '').includes('application/json')) return null;
+  try { return await req.json<T>(); } catch { return null; }
+}
+
+async function userCount(env: Env): Promise<number> {
+  const r = await env.DB.prepare(`SELECT count(*) AS n FROM users`).first<{ n: number }>();
+  return r?.n ?? 0;
+}
+
+export async function inboxRoutes(req: Request, env: Env, url: URL): Promise<Response> {
+  const path = url.pathname.replace(/\/$/, '') || '/inbox';
+
+  if (req.method === 'GET' && path === '/inbox') {
+    return new Response(inboxPage(), {
+      headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' },
+    });
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg:#16181a; --panel:#1e2124; --line:#2e3236; --ink:#e8e6e3; --dim:#9a9a93;
-      --mine:#155e4b; --theirs:#262a2e; --accent:#25d366; --warn:#fbbf24; --warnbg:#3a2f10;
+  if (req.method === 'GET' && path === '/inbox/manifest.json') {
+    return json({
+      name: 'Bandeja Tratto', short_name: 'Bandeja', start_url: '/inbox', scope: '/inbox',
+      display: 'standalone', background_color: '#111b21', theme_color: '#008069',
+      icons: [{ src: '/inbox/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' }],
+    }, 200, { 'cache-control': 'public, max-age=3600' });
+  }
+  if (req.method === 'GET' && path === '/inbox/icon.svg') {
+    return new Response(inboxIcon(), {
+      headers: { 'content-type': 'image/svg+xml', 'cache-control': 'public, max-age=86400' },
+    });
+  }
+
+  // ── sesión ──────────────────────────────────────────────────────────────────
+
+  // Primer usuario. Solo funciona mientras la tabla está vacía y exige el
+  // ADMIN_TOKEN: así la página puede ser pública sin que cualquiera se nombre admin.
+  if (req.method === 'POST' && path === '/inbox/setup') {
+    const b = await body<{ token: string; email: string; name: string; password: string }>(req);
+    if (!b) return json({ error: 'JSON requerido' }, 400);
+    if ((await userCount(env)) > 0) return json({ error: 'ya hay usuarios; entra con tu cuenta' }, 409);
+    if (!env.ADMIN_TOKEN || b.token !== env.ADMIN_TOKEN) return json({ error: 'ADMIN_TOKEN incorrecto' }, 401);
+    const email = normalizeEmail(b.email);
+    if (!validEmail(email)) return json({ error: 'correo inválido' }, 400);
+    const name = String(b.name ?? '').trim();
+    if (!name) return json({ error: 'nombre requerido' }, 400);
+    const bad = passwordProblem(b.password);
+    if (bad) return json({ error: bad }, 400);
+
+    const res = await env.DB.prepare(
+      `INSERT INTO users (email, name, password_hash, role) VALUES (?1, ?2, ?3, 'admin')`,
+    ).bind(email, name, await hashPassword(b.password)).run();
+    const token = await createSession(env, Number(res.meta.last_row_id));
+    return json({ ok: true }, 200, { 'set-cookie': sessionCookie(env, token) });
+  }
+
+  if (req.method === 'POST' && path === '/inbox/login') {
+    const b = await body<{ email: string; password: string }>(req);
+    if (!b) return json({ error: 'JSON requerido' }, 400);
+    const r = await login(env, b.email, b.password);
+    if ('error' in r) return json({ error: r.error }, r.status);
+    const token = await createSession(env, r.user.id);
+    return json({ ok: true, user: publicUser(r.user) }, 200, { 'set-cookie': sessionCookie(env, token) });
+  }
+
+  if (req.method === 'POST' && path === '/inbox/logout') {
+    const token = sessionToken(req);
+    if (token) await destroySession(env, token);
+    return json({ ok: true }, 200, { 'set-cookie': sessionCookie(env, null) });
+  }
+
+  // ── API con sesión ──────────────────────────────────────────────────────────
+
+  if (!path.startsWith('/inbox/api/')) return new Response('not found', { status: 404 });
+
+  const user = await sessionUser(env, req);
+  if (!user) {
+    // `setup: true` le dice a la página que muestre el alta del primer usuario en
+    // vez del login. Es la única pista que se da sin sesión.
+    const setup = (await userCount(env)) === 0;
+    return json({ error: 'sin sesión', setup }, 401);
+  }
+  const by = user.name;
+  const api = path.slice('/inbox/api'.length);
+
+  if (req.method === 'GET' && api === '/me') return json({ user: publicUser(user) });
+
+  if (req.method === 'GET' && api === '/threads') {
+    return ops.toResponse(await ops.listThreads(env, {
+      tenant: url.searchParams.get('tenant'),
+      leads: url.searchParams.get('leads') === '1',
+    }));
+  }
+  if (req.method === 'GET' && api === '/thread') {
+    return ops.toResponse(await ops.getThread(env, url.searchParams.get('phone') ?? ''));
+  }
+  if (req.method === 'GET' && api === '/tenants') return ops.toResponse(await ops.listTenants(env));
+
+  // Fotos y documentos del hilo. Con sesión basta: quien ve la bandeja ve todo.
+  if (req.method === 'GET' && api.startsWith('/media/')) {
+    return serveMedia(env, decodeURIComponent(api.slice('/media/'.length)));
+  }
+
+  if (req.method === 'POST' && api === '/send') {
+    const b = await body<{ phone: string; text: string }>(req);
+    if (!b) return json({ error: 'JSON requerido' }, 400);
+    return ops.toResponse(await ops.sendHuman(env, { phone: b.phone, text: b.text, by }));
+  }
+  if (req.method === 'POST' && api === '/handoff') {
+    const b = await body<{ phone: string; hours?: number | null }>(req);
+    if (!b) return json({ error: 'JSON requerido' }, 400);
+    return ops.toResponse(await ops.handoff(env, { phone: b.phone, hours: b.hours, by }));
+  }
+  if (req.method === 'POST' && api === '/assign') {
+    const b = await body<{ phone: string; tenant: string | null }>(req);
+    if (!b) return json({ error: 'JSON requerido' }, 400);
+    return ops.toResponse(await ops.assign(env, { phone: b.phone, tenant: b.tenant || null }));
+  }
+  if (req.method === 'POST' && api === '/lead') {
+    const b = await body<{ phone: string; status: string }>(req);
+    if (!b) return json({ error: 'JSON requerido' }, 400);
+    return ops.toResponse(await ops.setLeadStatus(env, b));
+  }
+
+  // Mi contraseña.
+  if (req.method === 'POST' && api === '/password') {
+    const b = await body<{ current: string; next: string }>(req);
+    if (!b) return json({ error: 'JSON requerido' }, 400);
+    const bad = passwordProblem(b.next);
+    if (bad) return json({ error: bad }, 400);
+    const row = await env.DB.prepare(`SELECT password_hash FROM users WHERE id = ?`)
+      .bind(user.id).first<{ password_hash: string }>();
+    if (!row || !(await verifyPassword(String(b.current ?? ''), row.password_hash))) {
+      return json({ error: 'la contraseña actual no coincide' }, 401);
+    }
+    await env.DB.prepare(`UPDATE users SET password_hash = ? WHERE id = ?`)
+      .bind(await hashPassword(b.next), user.id).run();
+    return json({ ok: true });
+  }
+
+  // ── usuarios (solo admin) ───────────────────────────────────────────────────
+
+  if (api.startsWith('/users')) {
+    if (user.role !== 'admin') return json({ error: 'solo administradores' }, 403);
+
+    if (req.method === 'GET' && api === '/users') {
+      const { results } = await env.DB.prepare(
+        `SELECT id, email, name, role, active, created_at, last_login_at FROM users ORDER BY name`,
+      ).all();
+      return json(results);
+    }
+
+    // Alta. La contraseña la pone el admin y se la pasa a la persona; ella la
+    // cambia después desde su menú. Sin correo de invitación: no hace falta aún.
+    if (req.method === 'POST' && api === '/users') {
+      const b = await body<{ email: string; name: string; password: string; role?: string }>(req);
+      if (!b) return json({ error: 'JSON requerido' }, 400);
+      const email = normalizeEmail(b.email);
+      if (!validEmail(email)) return json({ error: 'correo inválido' }, 400);
+      const name = String(b.name ?? '').trim();
+      if (!name) return json({ error: 'nombre requerido' }, 400);
+      const bad = passwordProblem(b.password);
+      if (bad) return json({ error: bad }, 400);
+      const dup = await env.DB.prepare(`SELECT 1 AS yes FROM users WHERE email = ?`).bind(email).first();
+      if (dup) return json({ error: 'ese correo ya tiene cuenta' }, 409);
+      await env.DB.prepare(
+        `INSERT INTO users (email, name, password_hash, role) VALUES (?1, ?2, ?3, ?4)`,
+      ).bind(email, name, await hashPassword(b.password), b.role === 'admin' ? 'admin' : 'agente').run();
+      return json({ ok: true });
+    }
+
+    // Edición: activar/desactivar, rol, nombre, resetear contraseña.
+    if (req.method === 'POST' && api === '/users/update') {
+      const b = await body<{
+        id: number; active?: boolean; role?: string; name?: string; password?: string;
+      }>(req);
+      if (!b || !b.id) return json({ error: 'id requerido' }, 400);
+      const target = await env.DB.prepare(`SELECT id, role, active FROM users WHERE id = ?`)
+        .bind(b.id).first<{ id: number; role: string; active: number }>();
+      if (!target) return json({ error: 'no existe' }, 404);
+
+      // Nadie se quita a sí mismo el admin ni se desactiva: sería quedarse fuera.
+      if (target.id === user.id && (b.active === false || (b.role && b.role !== 'admin'))) {
+        return json({ error: 'no puedes desactivarte ni quitarte el admin a ti mismo' }, 400);
+      }
+      const sets: string[] = [];
+      const vals: unknown[] = [];
+      if (typeof b.active === 'boolean') { sets.push('active = ?'); vals.push(b.active ? 1 : 0); }
+      if (b.role) { sets.push('role = ?'); vals.push(b.role === 'admin' ? 'admin' : 'agente'); }
+      if (typeof b.name === 'string' && b.name.trim()) { sets.push('name = ?'); vals.push(b.name.trim()); }
+      if (typeof b.password === 'string') {
+        const bad = passwordProblem(b.password);
+        if (bad) return json({ error: bad }, 400);
+        sets.push('password_hash = ?'); vals.push(await hashPassword(b.password));
+      }
+      if (sets.length === 0) return json({ error: 'nada que cambiar' }, 400);
+      vals.push(b.id);
+      await env.DB.prepare(`UPDATE users SET ${sets.join(', ')} WHERE id = ?`).bind(...vals).run();
+      // Desactivar o resetear contraseña cierra sus sesiones.
+      if (b.active === false || typeof b.password === 'string') {
+        await env.DB.prepare(`DELETE FROM sessions WHERE user_id = ?`).bind(b.id).run();
+      }
+      return json({ ok: true });
     }
   }
-  * { box-sizing:border-box }
-  body { margin:0; height:100vh; display:flex; background:var(--bg); color:var(--ink);
-         font:14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif }
-  #list { width:320px; flex:none; border-right:1px solid var(--line); background:var(--panel);
-          display:flex; flex-direction:column }
-  #list header { padding:.9rem 1rem; border-bottom:1px solid var(--line); display:flex;
-                 align-items:center; justify-content:space-between; gap:.5rem }
-  #list h1 { font-size:15px; margin:0; font-weight:650 }
-  #threads { overflow-y:auto; flex:1 }
-  .t { padding:.75rem 1rem; border-bottom:1px solid var(--line); cursor:pointer }
-  .t:hover { background:var(--bg) }
-  .t.on { background:var(--bg); box-shadow:inset 3px 0 0 var(--accent) }
-  .t .top { display:flex; justify-content:space-between; gap:.5rem; align-items:baseline }
-  .t .who { font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
-  .t .when { font-size:11px; color:var(--dim); flex:none }
-  .t .sub { font-size:12px; color:var(--dim); margin-top:.15rem;
-            display:flex; gap:.4rem; align-items:center; flex-wrap:wrap }
-  .tag { font-size:10px; padding:.05rem .4rem; border-radius:10px; border:1px solid var(--line);
-         text-transform:uppercase; letter-spacing:.03em }
-  .tag.lead { color:var(--accent); border-color:currentColor }
-  .tag.human { color:var(--warn); border-color:currentColor }
-  #pane { flex:1; display:flex; flex-direction:column; min-width:0 }
-  #pane header { padding:.8rem 1.2rem; border-bottom:1px solid var(--line); background:var(--panel);
-                 display:flex; align-items:center; gap:.8rem; flex-wrap:wrap }
-  #pane header b { font-size:15px }
-  #msgs { flex:1; overflow-y:auto; padding:1.2rem; display:flex; flex-direction:column; gap:.5rem }
-  .m { max-width:min(65%,34rem); padding:.5rem .75rem; border-radius:10px; white-space:pre-wrap;
-       word-wrap:break-word; border:1px solid var(--line) }
-  .m.in  { align-self:flex-start; background:var(--theirs); border-bottom-left-radius:3px }
-  .m.out { align-self:flex-end; background:var(--mine); border-bottom-right-radius:3px }
-  .m .meta { font-size:10px; color:var(--dim); margin-top:.25rem; text-align:right }
-  #composer { border-top:1px solid var(--line); padding:.75rem 1.2rem; background:var(--panel);
-              display:flex; gap:.6rem; align-items:flex-end }
-  textarea { flex:1; resize:none; font:inherit; padding:.55rem .7rem; border-radius:8px;
-             border:1px solid var(--line); background:var(--bg); color:inherit; min-height:2.5rem }
-  button { font:inherit; padding:.55rem 1rem; border-radius:8px; border:1px solid transparent;
-           background:var(--accent); color:#fff; font-weight:600; cursor:pointer }
-  button.ghost { background:transparent; color:var(--dim); border-color:var(--line); font-weight:500 }
-  button:disabled { opacity:.45; cursor:default }
-  .banner { padding:.55rem .9rem; border-radius:8px; font-size:13px;
-            background:var(--warnbg); color:var(--warn); margin:0 1.2rem 0 }
-  .empty { margin:auto; color:var(--dim) }
-</style>
-</head>
-<body>
-  <div id="list">
-    <header>
-      <h1>Bandeja</h1>
-      <button class="ghost" id="logout" title="Olvidar el token">salir</button>
-    </header>
-    <div id="threads"></div>
-  </div>
-  <div id="pane">
-    <header id="head"><span class="empty">Elige un hilo</span></header>
-    <div id="msgs"></div>
-    <div id="composer" hidden>
-      <textarea id="text" rows="1" placeholder="Escribe… (Enter manda, Shift+Enter salta línea)"></textarea>
-      <button id="send">Enviar</button>
-    </div>
-  </div>
-<script>
-(function () {
-  var KEY = 'tratto_admin_token';
-  var token = localStorage.getItem(KEY);
-  if (!token) {
-    token = window.prompt('ADMIN_TOKEN del gateway:');
-    if (!token) { document.body.innerHTML = '<p class=empty>Sin token no hay bandeja.</p>'; return; }
-    localStorage.setItem(KEY, token);
-  }
-  var current = location.hash.slice(1) || null;
-  var threads = [];
 
-  function api(path, opts) {
-    opts = opts || {};
-    opts.headers = Object.assign({ 'authorization': 'Bearer ' + token }, opts.headers || {});
-    return fetch(path, opts).then(function (r) {
-      if (r.status === 401) {
-        localStorage.removeItem(KEY);
-        alert('Token rechazado. Recarga la página.');
-        throw new Error('401');
-      }
-      return r.json().then(function (j) { return { ok: r.ok, body: j }; });
-    });
-  }
+  return new Response('not found', { status: 404 });
+}
 
-  function esc(s) {
-    return String(s == null ? '' : s).replace(/[&<>]/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c];
-    });
-  }
-
-  // Las fechas de D1 vienen en UTC sin zona; sin la Z el navegador las lee como locales
-  // y todo aparece con seis horas de menos.
-  function when(s) {
-    if (!s) return '';
-    var d = new Date(s.replace(' ', 'T') + 'Z');
-    var mins = (Date.now() - d.getTime()) / 60000;
-    if (mins < 1) return 'ahora';
-    if (mins < 60) return Math.floor(mins) + ' min';
-    if (mins < 1440) return Math.floor(mins / 60) + ' h';
-    return d.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
-  }
-
-  function isHuman(t) { return t.human_until && new Date(t.human_until.replace(' ', 'T') + 'Z') > new Date(); }
-
-  function drawThreads() {
-    document.getElementById('threads').innerHTML = threads.map(function (t) {
-      var name = t.profile_name || ('+' + t.wa_from);
-      var tags = '';
-      if (!t.tenant_slug) tags += '<span class="tag lead">lead</span>';
-      else tags += '<span class="tag">' + esc(t.tenant_slug) + '</span>';
-      if (isHuman(t)) tags += '<span class="tag human">tú</span>';
-      return '<div class="t' + (t.phone10 === current ? ' on' : '') + '" data-p="' + t.phone10 + '">' +
-        '<div class="top"><span class="who">' + esc(name) + '</span>' +
-        '<span class="when">' + when(t.last_seen) + '</span></div>' +
-        '<div class="sub">' + tags + '<span>' + t.msg_count + ' msj</span></div></div>';
-    }).join('') || '<p class="empty" style="padding:1rem">Nadie ha escrito todavía.</p>';
-
-    Array.prototype.forEach.call(document.querySelectorAll('.t'), function (el) {
-      el.onclick = function () { open(el.dataset.p); };
-    });
-  }
-
-  function loadThreads() {
-    return api('/admin/threads').then(function (r) { threads = r.body || []; drawThreads(); });
-  }
-
-  function open(p10) {
-    current = p10;
-    location.hash = p10;
-    drawThreads();
-    return api('/admin/thread?phone=' + p10).then(function (r) {
-      var t = r.body.thread || {};
-      var human = isHuman(t);
-      var stale = t.last_seen &&
-        (Date.now() - new Date(t.last_seen.replace(' ', 'T') + 'Z').getTime()) > 24 * 3600 * 1000;
-
-      document.getElementById('head').innerHTML =
-        '<b>' + esc(t.profile_name || ('+' + t.wa_from)) + '</b>' +
-        '<span style="color:var(--dim)">+' + esc(t.wa_from) + '</span>' +
-        (t.tenant_slug ? '<span class="tag">' + esc(t.tenant_slug) + '</span>'
-                       : '<span class="tag lead">lead</span>') +
-        '<button class="ghost" id="handoff" style="margin-left:auto">' +
-        (human ? 'Devolver al agente' : 'Tomar el hilo') + '</button>';
-
-      document.getElementById('handoff').onclick = function () {
-        api('/admin/threads/handoff', {
-          method: 'POST', headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ phone: p10, hours: human ? 0 : 6 }),
-        }).then(function () { loadThreads().then(function () { open(p10); }); });
-      };
-
-      var msgs = r.body.messages || [];
-      document.getElementById('msgs').innerHTML = msgs.map(function (m) {
-        var body = m.body || ('(' + m.kind + ')');
-        var by = m.direction === 'out'
-          ? ({ human: 'tú', agent: 'agente', ack: 'acuse', error: 'error' }[m.author] || 'salida')
-          : '';
-        return '<div class="m ' + (m.direction === 'out' ? 'out' : 'in') + '">' + esc(body) +
-          '<div class="meta">' + (by ? by + ' · ' : '') + when(m.created_at) + '</div></div>';
-      }).join('');
-
-      var box = document.getElementById('msgs');
-      box.scrollTop = box.scrollHeight;
-
-      var comp = document.getElementById('composer');
-      comp.hidden = false;
-      var ta = document.getElementById('text');
-      var btn = document.getElementById('send');
-      if (stale) {
-        ta.disabled = btn.disabled = true;
-        ta.placeholder = 'Ventana de 24 h cerrada — WhatsApp solo permite plantillas aprobadas.';
-      } else {
-        ta.disabled = btn.disabled = false;
-        ta.placeholder = 'Escribe… (Enter manda, Shift+Enter salta línea)';
-      }
-    });
-  }
-
-  function send() {
-    var ta = document.getElementById('text');
-    var text = ta.value.trim();
-    if (!text || !current) return;
-    var btn = document.getElementById('send');
-    btn.disabled = true;
-    api('/admin/send', {
-      method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ phone: current, text: text }),
-    }).then(function (r) {
-      btn.disabled = false;
-      if (!r.ok) { alert((r.body.error || 'falló') + '\\n\\n' + (r.body.detalle || '')); return; }
-      ta.value = '';
-      open(current);
-      loadThreads();
-    });
-  }
-
-  document.getElementById('send').onclick = send;
-  document.getElementById('text').onkeydown = function (e) {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
-  };
-  document.getElementById('logout').onclick = function () {
-    localStorage.removeItem(KEY); location.reload();
-  };
-
-  loadThreads().then(function () { if (current) open(current); });
-  setInterval(function () {
-    loadThreads().then(function () { if (current) open(current); });
-  }, 15000);
-})();
-</script>
-</body>
-</html>`;
+function publicUser(u: User) {
+  return { id: u.id, email: u.email, name: u.name, role: u.role };
 }

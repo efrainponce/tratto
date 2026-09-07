@@ -1,8 +1,12 @@
 // API mínima de operación, para no depender de `wrangler d1 execute` cada vez que
 // entra alguien nuevo. Bearer ADMIN_TOKEN; si el secret no está puesto, cerrado.
+//
+// Lo que toca hilos (listar, leer, contestar, tomar/soltar, re-rutear) vive en
+// ops.ts y lo comparte con la bandeja: aquí solo cambia la puerta de entrada.
 import type { Env } from './env';
-import { phone10, sendText } from './wa';
-import { logOutbound } from './routing';
+import { phone10 } from './wa';
+import * as ops from './ops';
+import { hashPassword, normalizeEmail, passwordProblem, validEmail } from './auth';
 
 function authed(req: Request, env: Env): boolean {
   if (!env.ADMIN_TOKEN) return false;
@@ -70,25 +74,17 @@ export async function adminRoutes(req: Request, env: Env, url: URL): Promise<Res
   // Hilos: quién ha escrito, a qué cliente quedó ruteado, cuántos mensajes.
   //   GET /admin/threads?tenant=janing | ?leads=1
   if (req.method === 'GET' && path === '/admin/threads') {
-    const tenant = url.searchParams.get('tenant');
-    const leads = url.searchParams.get('leads');
-    let q = env.DB.prepare(`SELECT * FROM threads ORDER BY last_seen DESC LIMIT 200`);
-    if (leads === '1') q = env.DB.prepare(`SELECT * FROM threads WHERE tenant_slug IS NULL ORDER BY last_seen DESC LIMIT 200`);
-    else if (tenant) q = env.DB.prepare(`SELECT * FROM threads WHERE tenant_slug = ? ORDER BY last_seen DESC LIMIT 200`).bind(tenant);
-    const { results } = await q.all();
-    return Response.json(results);
+    return ops.toResponse(await ops.listThreads(env, {
+      tenant: url.searchParams.get('tenant'),
+      leads: url.searchParams.get('leads') === '1',
+    }));
   }
 
   // Re-rutear un número a mano (p. ej. un lead que se volvió cliente).
   //   POST /admin/threads/assign {phone, tenant|null}
   if (req.method === 'POST' && path === '/admin/threads/assign') {
     const b = await req.json<{ phone: string; tenant: string | null }>();
-    const p10 = phone10(b.phone ?? '');
-    if (p10.length !== 10) return Response.json({ error: 'teléfono inválido' }, { status: 400 });
-    const res = await env.DB.prepare(
-      `UPDATE threads SET tenant_slug = ?, resolved_by = 'sticky', needs_review = 0 WHERE phone10 = ?`,
-    ).bind(b.tenant, p10).run();
-    return Response.json({ ok: true, actualizados: res.meta?.changes ?? 0 });
+    return ops.toResponse(await ops.assign(env, b));
   }
 
   // Últimos mensajes, para depurar ruteos.
@@ -97,7 +93,7 @@ export async function adminRoutes(req: Request, env: Env, url: URL): Promise<Res
     const phone = url.searchParams.get('phone');
     const tenant = url.searchParams.get('tenant');
     const cols = `id, wa_id, phone10, tenant_slug, resolved_by, kind, body, dispatch,
-                  direction, author, created_at`;
+                  direction, author, sent_by, created_at`;
     let q = env.DB.prepare(`SELECT ${cols} FROM messages ORDER BY id DESC LIMIT 100`);
     if (phone) {
       q = env.DB.prepare(`SELECT ${cols} FROM messages WHERE phone10 = ? ORDER BY id DESC LIMIT 100`)
@@ -110,75 +106,66 @@ export async function adminRoutes(req: Request, env: Env, url: URL): Promise<Res
     return Response.json(results);
   }
 
-  // Un hilo completo, en orden de lectura (viejo → nuevo). Es lo que pinta la bandeja.
+  // Un hilo completo, en orden de lectura (viejo → nuevo).
   //   GET /admin/thread?phone=5511112222
   if (req.method === 'GET' && path === '/admin/thread') {
-    const p10 = phone10(url.searchParams.get('phone') ?? '');
-    if (p10.length !== 10) return Response.json({ error: 'teléfono inválido' }, { status: 400 });
-    const thread = await env.DB.prepare(`SELECT * FROM threads WHERE phone10 = ?`).bind(p10).first();
-    const { results } = await env.DB.prepare(
-      `SELECT id, body, kind, direction, author, dispatch, created_at
-         FROM messages WHERE phone10 = ? ORDER BY id ASC LIMIT 300`,
-    ).bind(p10).all();
-    return Response.json({ thread, messages: results });
+    return ops.toResponse(await ops.getThread(env, url.searchParams.get('phone') ?? ''));
   }
 
-  // Contestar a mano. Toma el hilo automáticamente: si escribiste tú, tú lo tienes.
+  // Contestar a mano. Toma el hilo automáticamente.
   //   POST /admin/send {phone, text, hours?}
   if (req.method === 'POST' && path === '/admin/send') {
     const b = await req.json<{ phone: string; text: string; hours?: number }>();
-    const p10 = phone10(b.phone ?? '');
-    const text = (b.text ?? '').trim();
-    if (p10.length !== 10) return Response.json({ error: 'teléfono inválido' }, { status: 400 });
-    if (!text) return Response.json({ error: 'texto vacío' }, { status: 400 });
-
-    const th = await env.DB.prepare(
-      `SELECT wa_from, tenant_slug, last_seen FROM threads WHERE phone10 = ?`,
-    ).bind(p10).first<{ wa_from: string; tenant_slug: string | null; last_seen: string }>();
-    if (!th) return Response.json({ error: 'ese número nunca ha escrito' }, { status: 404 });
-
-    // Meta solo deja texto libre dentro de las 24 h desde el último mensaje de la
-    // persona. Fuera de eso hay que usar plantilla aprobada, y no tenemos ninguna.
-    const open = await env.DB.prepare(
-      `SELECT 1 AS yes FROM threads WHERE phone10 = ? AND last_seen > datetime('now','-24 hours')`,
-    ).bind(p10).first();
-    if (!open) {
-      return Response.json({
-        error: 'ventana de 24 h cerrada',
-        detalle: 'La persona no escribe desde hace más de 24 h. WhatsApp solo permite ' +
-                 'plantillas aprobadas fuera de esa ventana, y esta cuenta no tiene ninguna.',
-      }, { status: 409 });
-    }
-
-    try {
-      await sendText(env, th.wa_from, text);
-    } catch (err) {
-      return Response.json({ error: 'WhatsApp rechazó el envío', detalle: String(err) }, { status: 502 });
-    }
-    await logOutbound(env, {
-      phone10: p10, to: th.wa_from, tenantSlug: th.tenant_slug, body: text, author: 'human',
-    });
-    const hours = Number.isFinite(b.hours) ? Number(b.hours) : 6;
-    await env.DB.prepare(
-      `UPDATE threads SET human_until = datetime('now', ?) WHERE phone10 = ?`,
-    ).bind(`+${hours} hours`, p10).run();
-    return Response.json({ ok: true, relevo_humano_hasta_en_horas: hours });
+    return ops.toResponse(await ops.sendHuman(env, { ...b, by: 'api' }));
   }
 
   // Tomar o soltar el hilo sin escribir nada.
   //   POST /admin/threads/handoff {phone, hours}   — hours 0/null = soltar
   if (req.method === 'POST' && path === '/admin/threads/handoff') {
     const b = await req.json<{ phone: string; hours?: number | null }>();
-    const p10 = phone10(b.phone ?? '');
-    if (p10.length !== 10) return Response.json({ error: 'teléfono inválido' }, { status: 400 });
-    const hours = b.hours == null ? 0 : Number(b.hours);
-    if (hours <= 0) {
-      await env.DB.prepare(`UPDATE threads SET human_until = NULL WHERE phone10 = ?`).bind(p10).run();
-      return Response.json({ ok: true, relevo: 'soltado — vuelve a contestar el agente' });
-    }
-    await env.DB.prepare(`UPDATE threads SET human_until = datetime('now', ?) WHERE phone10 = ?`)
-      .bind(`+${hours} hours`, p10).run();
-    return Response.json({ ok: true, relevo: `humano por ${hours} h` });
+    return ops.toResponse(await ops.handoff(env, { ...b, by: 'api' }));
+  }
+
+  // Usuarios de la bandeja. Normalmente se administran desde /inbox; esto es la
+  // vía de rescate: crear el primero, o resetear la contraseña de quien la perdió.
+  //   POST /admin/users {email, name?, password, role?}   — upsert por correo
+  //   GET  /admin/users
+  if (req.method === 'POST' && path === '/admin/users') {
+    const b = await req.json<{ email: string; name?: string; password: string; role?: string }>();
+    const email = normalizeEmail(b.email);
+    if (!validEmail(email)) return Response.json({ error: 'correo inválido' }, { status: 400 });
+    const bad = passwordProblem(b.password);
+    if (bad) return Response.json({ error: bad }, { status: 400 });
+    // Si es nuevo y no se dice rol, agente. Si ya existe, el rol y el nombre solo
+    // cambian cuando vienen en el cuerpo.
+    const roleGiven = b.role === 'admin' || b.role === 'agente';
+    const hash = await hashPassword(b.password);
+    const givenName = (b.name ?? '').trim();
+    await env.DB.prepare(
+      `INSERT INTO users (email, name, password_hash, role)
+       VALUES (?1, ?2, ?3, ?4)
+       ON CONFLICT(email) DO UPDATE SET
+         password_hash = excluded.password_hash,
+         name = CASE WHEN ?5 = 1 THEN excluded.name ELSE users.name END,
+         role = CASE WHEN ?6 = 1 THEN excluded.role ELSE users.role END,
+         active = 1`,
+    ).bind(
+      email, givenName || email.split('@')[0], hash, roleGiven ? b.role : 'agente',
+      givenName ? 1 : 0, roleGiven ? 1 : 0,
+    ).run();
+    // Cambiar contraseña por aquí cierra las sesiones abiertas de esa cuenta.
+    await env.DB.prepare(
+      `DELETE FROM sessions WHERE user_id = (SELECT id FROM users WHERE email = ?)`,
+    ).bind(email).run();
+    const row = await env.DB.prepare(`SELECT id, email, name, role FROM users WHERE email = ?`).bind(email).first();
+    return Response.json({ ok: true, user: row });
+  }
+
+  if (req.method === 'GET' && path === '/admin/users') {
+    const { results } = await env.DB.prepare(
+      `SELECT id, email, name, role, active, created_at, last_login_at FROM users ORDER BY id`,
+    ).all();
+    return Response.json(results);
   }
 
   return new Response('not found', { status: 404 });
