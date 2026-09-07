@@ -1,0 +1,203 @@
+// tratto-wa — un solo número de WhatsApp para todo Tratto.
+//
+// Recibe de quien sea (gente de Janing, de clientes futuros, o leads fríos de la
+// landing), averigua a qué cliente pertenece el número y reenvía el mensaje al
+// portal de ese cliente. Los desconocidos NO se rechazan: quedan como lead.
+//
+// La autenticación entrante es la firma HMAC de Meta (WA_APP_SECRET). No hay
+// Cloudflare Access enfrente porque Meta no puede presentar credenciales.
+import type { Env } from './env';
+import { hmacHex, timingSafeEqual } from './crypto';
+import { sendText, markRead } from './wa';
+import {
+  alreadyProcessed, dispatchToTenant, logMessage, logOutbound, resolve, touchThread,
+  type Incoming,
+} from './routing';
+import { adminRoutes } from './admin';
+import { notify, type NotifyReason } from './notify';
+import { inboxPage } from './inbox';
+
+const LEAD_REPLY =
+  'Hola 👋 Gracias por escribir a Tratto. Ya quedó registrado tu mensaje y ' +
+  'Efraín te contesta en breve.';
+
+const ERROR_REPLY =
+  'Ocurrió un error procesando tu mensaje 😕 Ya quedó registrado; intenta de nuevo en un momento.';
+
+async function validSignature(env: Env, rawBody: string, header: string | null): Promise<boolean> {
+  if (!env.WA_APP_SECRET) {
+    // Fail closed en prod. Sin firma solo se puede probar en dev.
+    return env.ENVIRONMENT !== 'prod';
+  }
+  if (!header?.startsWith('sha256=')) return false;
+  const expected = await hmacHex(env.WA_APP_SECRET, rawBody);
+  return timingSafeEqual(expected, header.slice('sha256='.length).toLowerCase());
+}
+
+interface MetaMessage {
+  id: string;
+  from: string;
+  type: string;
+  timestamp?: string;
+  text?: { body: string };
+}
+interface MetaContact { wa_id?: string; profile?: { name?: string } }
+interface MetaBody {
+  entry?: Array<{ changes?: Array<{ value?: {
+    messages?: MetaMessage[];
+    contacts?: MetaContact[];
+  } }> }>;
+}
+
+function extract(body: MetaBody): Incoming[] {
+  const out: Incoming[] = [];
+  for (const entry of body.entry ?? []) {
+    for (const change of entry.changes ?? []) {
+      const value = change.value;
+      if (!value?.messages) continue;
+      // `contacts` trae el nombre de perfil de WhatsApp; sirve para nombrar leads.
+      const names = new Map<string, string>();
+      for (const c of value.contacts ?? []) {
+        if (c.wa_id && c.profile?.name) names.set(c.wa_id, c.profile.name);
+      }
+      for (const m of value.messages) {
+        out.push({
+          waId: m.id,
+          from: m.from,
+          kind: m.type,
+          text: m.type === 'text' ? (m.text?.body ?? null) : null,
+          profileName: names.get(m.from) ?? null,
+          timestamp: m.timestamp ?? null,
+          raw: m,
+        });
+      }
+    }
+  }
+  return out;
+}
+
+async function processMessage(env: Env, msg: Incoming): Promise<void> {
+  if (await alreadyProcessed(env, msg.waId)) return;
+
+  const r = await resolve(env, msg);
+  const thread = await touchThread(env, msg, r);
+  await markRead(env, msg.waId);
+
+  // Relevo humano: si alguien tomó el hilo a mano y sigue vigente, el agente se
+  // calla. Contestar los dos es peor que no contestar ninguno.
+  const humanHasIt = !!thread.humanUntil && thread.humanUntil > new Date().toISOString().replace('T', ' ').slice(0, 19);
+
+  let status = 'lead';
+  let reply: string | null = r.tenant ? null : LEAD_REPLY;
+  let author = 'ack';
+  let detail: string | undefined;
+
+  if (humanHasIt) {
+    status = 'humano';
+    reply = null;
+    author = 'human';
+  } else if (r.tenant) {
+    try {
+      const d = await dispatchToTenant(env, msg, r);
+      status = d.status;
+      reply = d.reply;
+      author = d.status === 'ok' ? 'agent' : 'ack';
+    } catch (err) {
+      // El mensaje YA quedó en `messages`; el portal se cayó, no nosotros.
+      console.error('dispatch', r.tenant.slug, err);
+      detail = String(err).slice(0, 300);
+      status = `error:${detail.slice(0, 120)}`;
+      reply = ERROR_REPLY;
+      author = 'error';
+    }
+  }
+
+  await logMessage(env, msg, r, status);
+
+  if (reply) {
+    try {
+      await sendText(env, msg.from, reply);
+      await logOutbound(env, {
+        phone10: r.phone10, to: msg.from, tenantSlug: r.tenant?.slug ?? null,
+        body: reply, author,
+      });
+    } catch (err) {
+      console.error('send', err);
+      detail = detail ?? String(err).slice(0, 300);
+    }
+  }
+
+  // Avisar solo cuando hace falta una persona. El enfriamiento vive en notify().
+  const reason: NotifyReason | null =
+    status.startsWith('error:') ? 'error'
+    : humanHasIt ? 'humano'
+    : (thread.isNew && !r.tenant) ? 'lead'
+    : null;
+
+  if (reason) {
+    await notify(env, {
+      reason,
+      phone10: r.phone10,
+      waFrom: msg.from,
+      profileName: msg.profileName,
+      tenantSlug: r.tenant?.slug ?? null,
+      text: msg.text,
+      detail,
+    });
+  }
+}
+
+export default {
+  async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    const url = new URL(req.url);
+
+    // Handshake de verificación de Meta. Es lo único que necesita responder para
+    // que el botón "Verify and save" del dashboard acepte la Callback URL.
+    if (req.method === 'GET' && url.pathname === '/wa/webhook') {
+      const mode = url.searchParams.get('hub.mode');
+      const token = url.searchParams.get('hub.verify_token');
+      const challenge = url.searchParams.get('hub.challenge');
+      if (mode === 'subscribe' && env.WA_VERIFY_TOKEN && token === env.WA_VERIFY_TOKEN && challenge) {
+        return new Response(challenge, { headers: { 'content-type': 'text/plain' } });
+      }
+      return new Response('forbidden', { status: 403 });
+    }
+
+    // Entrantes. Meta reintenta si tardamos: se acusa de recibido de inmediato y
+    // el trabajo real corre en waitUntil.
+    if (req.method === 'POST' && url.pathname === '/wa/webhook') {
+      const raw = await req.text();
+      if (!(await validSignature(env, raw, req.headers.get('x-hub-signature-256')))) {
+        return new Response('invalid signature', { status: 401 });
+      }
+      let body: MetaBody;
+      try { body = JSON.parse(raw); } catch { return new Response('bad request', { status: 400 }); }
+
+      const messages = extract(body);
+      if (messages.length > 0) {
+        ctx.waitUntil((async () => {
+          for (const m of messages) {
+            try { await processMessage(env, m); } catch (err) { console.error('process', err); }
+          }
+        })());
+      }
+      return new Response('ok');
+    }
+
+    if (url.pathname.startsWith('/admin/')) return adminRoutes(req, env, url);
+
+    // La bandeja. El HTML no lleva secretos: pide el ADMIN_TOKEN al abrirse y todas
+    // sus llamadas van a /admin/* con Bearer, igual que curl.
+    if (req.method === 'GET' && (url.pathname === '/inbox' || url.pathname === '/inbox/')) {
+      return new Response(inboxPage(), {
+        headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' },
+      });
+    }
+
+    if (url.pathname === '/health') {
+      return Response.json({ ok: true, env: env.ENVIRONMENT });
+    }
+
+    return new Response('not found', { status: 404 });
+  },
+};

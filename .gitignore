@@ -1,0 +1,10 @@
+
+# secretos
+.env
+.env.*
+!.env.example
+
+# caché local de wrangler
+.wrangler/
+node_modules/
+.DS_Store

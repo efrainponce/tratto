@@ -1,0 +1,46 @@
+{
+  "$schema": "https://unpkg.com/wrangler/config-schema.json",
+  "name": "tratto-wa",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-01",
+  // UN SOLO número de WhatsApp para todo Tratto. Este Worker NO contesta: identifica
+  // quién escribe (directorio → tenant), deja bitácora y reenvía el mensaje al portal
+  // del cliente, que responde con su propio agente y su propia D1. Así el aislamiento
+  // por cliente sigue igual que hoy (cada portal ve solo sus datos) y dar de alta un
+  // cliente nuevo = una fila en `tenants` + sus teléfonos en `directory`.
+  //
+  // cmp-portal NO pasa por aquí: tiene su propio número y su propio webhook.
+  // Dominio propio: el subdominio de workers.dev que tocó lleva el nombre de un
+  // cliente y esta URL la ve Meta y cualquier portal que despachemos.
+  "routes": [{ "pattern": "wa.usetratto.com", "custom_domain": true }],
+  "workers_dev": false,
+  "observability": { "enabled": true },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "tratto-wa",
+      "database_id": "23487f72-e117-4619-95e5-28f2ffa7b90b"
+    }
+  ],
+  "vars": {
+    "ENVIRONMENT": "prod",
+    // Avisos por correo. Solo se manda cuando hace falta una PERSONA: lead nuevo,
+    // el agente falló, o el hilo está en relevo humano. Todo lo demás lo resuelve
+    // el agente y no merece interrumpir a nadie. Ver src/notify.ts.
+    "NOTIFY_TO": "hola@usetratto.com",
+    "NOTIFY_FROM": "alertas@usetratto.com",
+    "NOTIFY_COOLDOWN_H": "6",
+    "INBOX_URL": "https://wa.usetratto.com/inbox"
+  },
+  // Email Sending de Cloudflare. Requiere `wrangler email sending enable usetratto.com`
+  // (o darlo de alta en el dashboard). Si el binding no está, notify.ts cae a Resend
+  // con el secret RESEND_API_KEY.
+  "send_email": [{ "name": "EMAIL" }]
+  // Secrets (npx wrangler secret put <NOMBRE>):
+  //   WA_VERIFY_TOKEN         — el que se pega en Meta → Configuration → Webhook
+  //   WA_APP_SECRET           — App Settings → Basic → App Secret (firma HMAC entrante)
+  //   WHATSAPP_TOKEN          — token permanente del System User (whatsapp_business_messaging)
+  //   WHATSAPP_PHONE_NUMBER_ID— WhatsApp → API Setup
+  //   GATEWAY_SECRET          — con el que se firma lo que mandamos a los portales
+  //   ADMIN_TOKEN             — bearer para /admin/*
+}
