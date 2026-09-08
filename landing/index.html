@@ -207,11 +207,11 @@
   .hero { padding: 56px 0 48px; }
   .hero h1 {
     margin-top: 0;
-    font-size: clamp(36px, 4.8vw, 58px);
+    font-size: clamp(32px, 3.8vw, 46px);
     font-weight: 600; line-height: 1.02; letter-spacing: -0.035em;
   }
   .hero h1 em { font-style: normal; color: var(--accent); }
-  .hero h1 em { display: inline; }
+  .hero h1 em { display: block; margin-top: .12em; }
   .hero .lede { margin-top: 20px; max-width: 36rem; margin-inline: auto; font-size: 19px; }
   .hero-proof { margin-top: 24px; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 22px; font-size: 14px; color: var(--ink-3); }
   .hero-proof span { display: inline-flex; align-items: center; gap: 8px; }
@@ -222,7 +222,7 @@
   .fig-cap { margin-top: 14px; font-size: 14px; color: var(--ink-3); }
   .fig-cap b { color: var(--ink-2); font-weight: 600; }
   .hero-grid { width: min(var(--wide), 100% - 3rem); margin-inline: auto; display: grid; grid-template-columns: 1fr; justify-items: center; gap: 44px; text-align: center; }
-  .hero-copy { max-width: 52rem; }
+  .hero-copy { max-width: 56rem; }
   .hero-wa { max-width: 420px; justify-self: end; width: 100%; }
   .hero-wa .wa { font-size: 12.5px; padding: 18px; box-shadow: var(--shadow); border: 1px solid var(--border); }
   .hero-wa .b { max-width: 88%; }
@@ -814,8 +814,8 @@
   <section class="hero">
     <div class="hero-grid">
       <div class="hero-copy">
-        <h1>Tu venta vive en cinco lugares. <em>Tratto la junta en uno.</em></h1>
-        <p class="lede">Costeas en Excel, cotizas en Word, avisas por WhatsApp y cobras con otro Excel. Tratto lleva cada venta en un solo expediente, de la cotización a la entrega y el cobro.</p>
+        <h1>Tu venta vive en el Excel y el WhatsApp de alguien. <em>Tratto la pone en tu empresa, en un solo lugar.</em></h1>
+        <p class="lede">Ventas, compras, dirección y administración trabajan en el mismo expediente, de la cotización a la entrega y el cobro.</p>
         <div class="cta">
           <a class="btn btn-primary btn-lg" data-wa href="https://wa.me/5213349424216?text=Hola%2C%20quiero%20ver%20Tratto" rel="noopener">Escríbenos por WhatsApp</a>
           <a class="btn btn-ghost btn-lg" href="#reemplaza">Ver qué reemplaza</a>
@@ -890,7 +890,7 @@
         <div class="swap-tabs" role="tablist" aria-label="Pasos de la venta">
         <button type="button" role="tab" class="on" aria-selected="true" data-i="0"><span class="tool xls">Excel</span><b>Costear</b><i class="bar"></i></button>
         <button type="button" role="tab" aria-selected="false" data-i="1"><span class="tool doc">Word y PDF</span><b>Cotizar</b><i class="bar"></i></button>
-        <button type="button" role="tab" aria-selected="false" data-i="2"><span class="tool mail">Correo</span><b>Enviar y archivar</b><i class="bar"></i></button>
+        <button type="button" role="tab" aria-selected="false" data-i="2"><span class="tool mail">Correo</span><b>Pasar la info a compras</b><i class="bar"></i></button>
         <button type="button" role="tab" aria-selected="false" data-i="3"><span class="tool chat">WhatsApp interno</span><b>Dar seguimiento</b><i class="bar"></i></button>
         <button type="button" role="tab" aria-selected="false" data-i="4"><span class="tool pdf">PDF, Excel y WhatsApp</span><b>Entregar</b><i class="bar"></i></button>
         <button type="button" role="tab" aria-selected="false" data-i="5"><span class="tool xls">Excel</span><b>Cobrar</b><i class="bar"></i></button>
@@ -937,18 +937,18 @@
           <div class="swap-today">
             <span class="lab">Hoy</span>
             <div class="files">
-              <div class="file mail">RE: RE: RE: cotización uniformes</div>
+              <div class="file mail">Para: compras · "Te paso la lista, adjunto"</div>
             </div>
-            <h3>Enviar y archivar</h3>
-            <p>Cadenas de RE: RE: RE: con adjuntos que se pierden.</p>
+            <h3>Pasar la info a compras</h3>
+            <p>El vendedor manda un correo a compras con adjuntos que se pierden.</p>
           </div>
           <div class="swap-arrow" aria-hidden="true"></div>
           <div class="swap-tratto">
             <span class="lab">En Tratto</span>
             <div class="opp"><div class="opp-r"><em>Documentos</em><span>bases, anexo, V1 y V2</span><span class="chip nueva">5 archivos</span></div></div>
             <span class="chip accent">Documentación</span>
-            <h3>Cada documento en la carpeta de su venta</h3>
-            <p>Bases, anexos, cotizaciones y órdenes de compra, cada uno en su lugar.</p>
+            <h3>Los dos equipos en el mismo expediente</h3>
+            <p>Ventas sube la información y compras ya la tiene. Sin correos.</p>
           </div>
         </div>
         <div class="swap-pane" data-i="3">
