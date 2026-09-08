@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Tratto, el sistema operativo de tu negocio</title>
-<meta name="description" content="Tratto es el sistema operativo de tu negocio: oportunidades, costeo, cotizaciones, proyectos y cobranza en un solo portal, desde WhatsApp. Hecho a mano para pequeñas y medianas empresas.">
+<title>Tratto, tu venta en un solo lugar</title>
+<meta name="description" content="Hoy tu venta vive repartida en Excel, WhatsApp, Word y correo. Tratto la junta en un portal hecho para tu empresa: costeo, cotización en PDF, seguimiento, entrega y cobranza, por etapas.">
 <meta name="theme-color" content="#f7f4ee" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#161412" media="(prefers-color-scheme: dark)">
-<meta property="og:title" content="Tratto, el sistema operativo de tu negocio">
-<meta property="og:description" content="Oportunidades, costeo, cotizaciones, proyectos y cobranza en un solo portal, desde WhatsApp. Hecho a mano para pequeñas y medianas empresas.">
+<meta property="og:title" content="Tratto, tu venta en un solo lugar">
+<meta property="og:description" content="Hoy tu venta vive repartida en Excel, WhatsApp, Word y correo. Tratto la junta en un portal hecho para tu empresa, por etapas.">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="es_MX">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -206,12 +206,12 @@
   /* ============ HERO ============ */
   .hero { padding: 88px 0 56px; }
   .hero h1 {
-    margin-top: 20px;
-    font-size: clamp(40px, 7.2vw, 88px);
-    font-weight: 600; line-height: .96; letter-spacing: -0.04em;
+    margin-top: 0;
+    font-size: clamp(34px, 5vw, 60px);
+    font-weight: 600; line-height: 1.02; letter-spacing: -0.035em;
   }
   .hero h1 em { font-style: normal; color: var(--accent); }
-  .hero h1 em { display: block; }
+  .hero h1 em { display: block; margin-top: .18em; }
   .hero .lede { margin-top: 28px; max-width: 34rem; }
   .hero-proof { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 14px; color: var(--ink-3); }
   .hero-proof span { display: inline-flex; align-items: center; gap: 8px; }
@@ -221,21 +221,56 @@
   .hero-fig { margin-top: 64px; }
   .fig-cap { margin-top: 14px; font-size: 14px; color: var(--ink-3); }
   .fig-cap b { color: var(--ink-2); font-weight: 600; }
-  .hero-grid { width: min(var(--wide), 100% - 3rem); margin-inline: auto; display: grid; grid-template-columns: 1.2fr .8fr; gap: 48px; align-items: center; }
+  .hero-grid { width: min(var(--wide), 100% - 3rem); margin-inline: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; }
   .hero-copy .lede { max-width: 36rem; }
   .hero-wa { max-width: 420px; justify-self: end; width: 100%; }
   .hero-wa .wa { font-size: 12.5px; padding: 18px; box-shadow: var(--shadow); border: 1px solid var(--border); }
   .hero-wa .b { max-width: 88%; }
   .wa-head { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; margin-bottom: 4px; border-bottom: 1px solid var(--border); }
   .wa-head i { width: 30px; height: 30px; border-radius: 50%; background: var(--accent); flex: none; position: relative; }
-  .wa-head i::after { content: "T"; position: absolute; inset: 0; display: grid; place-items: center; color: var(--accent-ink); font: 700 15px var(--font-display); font-style: normal; }
+  .wa-head i::after { content: "T"; position: absolute; top: 0; right: 0; bottom: 0; left: 0; display: grid; place-items: center; color: var(--accent-ink); font: 700 15px var(--font-display); font-style: normal; }
   .wa-head b { display: block; font-weight: 600; font-size: 12.5px; color: var(--ink); }
   .wa-head small { font-size: 10.5px; color: var(--ink-3); }
-  .hero-wa-cap { margin-top: 12px; font-size: 13.5px; color: var(--ink-3); max-width: 38ch; }
-  @media (max-width: 900px) { .hero-grid { grid-template-columns: 1fr; gap: 36px; } .hero-wa { justify-self: start; max-width: 460px; } }
+  .hero-wa-cap { margin-top: 12px; font-size: 13.5px; color: var(--ink-3); max-width: 38ch; min-height: 2.9em; transition: opacity .35s; }
+  .hero-wa-cap.fade { opacity: 0; }
+  /* Demo animada: los globos ocupan su espacio desde el inicio (sin saltos) y se revelan uno a uno */
+  .wa.play .b { opacity: 0; transform: translateY(8px); transition: opacity .4s ease, transform .4s cubic-bezier(.2,.7,.2,1); }
+  .wa.play .b.show { opacity: 1; transform: none; }
+  .wa .slot { position: relative; display: flex; flex-direction: column; }
+  .wa .typing { position: absolute; left: 0; top: 0; display: none; align-items: center; gap: 4px; padding: 11px 13px; background: var(--wa-in); border-radius: 10px; border-top-left-radius: 3px; box-shadow: 0 1px 1px rgba(0,0,0,.06); }
+  .wa .typing.show { display: flex; }
+  .wa .typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-3); animation: dot 1.1s infinite ease-in-out; }
+  .wa .typing i:nth-child(2) { animation-delay: .18s; } .wa .typing i:nth-child(3) { animation-delay: .36s; }
+  @keyframes dot { 0%, 60%, 100% { transform: translateY(0); opacity: .5; } 30% { transform: translateY(-3px); opacity: 1; } }
+  /* Escenario: el chat y, encima, la vista del portal que aparece al final */
+  .hero-stage { position: relative; display: grid; }
+  .hero-stage > .wa, .hero-stage > .pm { grid-area: 1 / 1; min-width: 0; }
+  .hero-stage .wa { transition: opacity .5s ease, transform .5s ease; }
+  .hero-stage.portal .wa { opacity: 0; transform: scale(.985); pointer-events: none; }
+  .hero-stage:not(.portal) .pm { pointer-events: none; }
+  .pm { position: relative; width: 100%; display: flex; flex-direction: column; gap: 10px; padding: 16px 18px; overflow: hidden; background: var(--bg-raised); border: 1px solid var(--border); border-radius: var(--r-xl); box-shadow: var(--shadow); font-size: 12px; color: var(--ink); opacity: 0; transform: translateY(6px); transition: opacity .5s ease, transform .5s ease; pointer-events: none; }
+  .hero-stage.portal .pm { opacity: 1; transform: none; }
+  .pm > * { opacity: 0; transform: translateY(6px); transition: opacity .4s ease, transform .4s cubic-bezier(.2,.7,.2,1); }
+  .pm > .show { opacity: 1; transform: none; }
+  .pm-top { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--ink-3); padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  .pm-user { display: flex; align-items: center; gap: 6px; color: var(--ink-2); }
+  .pm-user i { width: 20px; height: 20px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font: 600 10px var(--font-ui); font-style: normal; }
+  .pm-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .pm-title h4 { font-family: var(--font-ui); font-size: 15px; font-weight: 600; letter-spacing: 0; margin: 0; }
+  .pm-meta { color: var(--ink-3); font-size: 11.5px; line-height: 1.5; } .pm-meta b { color: var(--ink); font-weight: 600; }
+  .pm-block small.h { display: block; font: 600 10px var(--font-ui); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 6px; }
+  .pm-act { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--bg-sunken); }
+  .pm-act .grow { flex: 1; font-weight: 500; } .pm-act .who { color: var(--ink-3); font-size: 11px; white-space: nowrap; }
+  .pm-post { display: flex; gap: 8px; padding: 7px 0; border-top: 1px solid var(--border-subtle); }
+  .pm-post i { width: 20px; height: 20px; border-radius: 50%; flex: none; background: var(--bg-sunken); color: var(--ink-3); display: grid; place-items: center; font-style: normal; font-size: 10px; }
+  .pm-post b { font-weight: 600; } .pm-post small { color: var(--ink-3); } .pm-post p { margin: 2px 0 0; color: var(--ink-2); line-height: 1.4; }
+  .hero-stage .replay { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); font: inherit; font-size: 10.5px; color: var(--ink-3); background: var(--bg-raised); border: 1px solid var(--border); border-radius: var(--r-pill); padding: 3px 10px; cursor: pointer; opacity: 0; transition: opacity .3s; pointer-events: none; }
+  .hero-stage .replay.show { opacity: 1; pointer-events: auto; }
+  @media (prefers-reduced-motion: reduce) { .wa.play .b { opacity: 1; transform: none; transition: none; } .wa .typing, .pm, .hero-stage .replay { display: none !important; } }
+  @media (max-width: 900px) { .hero-grid { grid-template-columns: 1fr; gap: 40px; } .hero-wa { justify-self: start; max-width: 460px; } .hero-ba { justify-self: start; max-width: 560px; } }
   @media (max-width: 640px) {
     .hero { padding: 40px 0 40px; }
-    .hero h1 { font-size: clamp(38px, 11.5vw, 52px); margin-top: 14px; }
+    .hero h1 { font-size: clamp(32px, 9.5vw, 44px); margin-top: 14px; }
     .hero .lede { margin-top: 20px; }
     .hero .cta { margin-top: 28px; }
     .hero-proof { margin-top: 22px; gap: 6px 16px; font-size: 13px; }
@@ -244,6 +279,83 @@
     .hero-fig { margin-top: 40px; }
     .fig-cap { font-size: 13px; }
   }
+
+  /* ============ HERO: HOY → EN TRATTO ============ */
+  .hero-ba { margin: 0; justify-self: end; width: 100%; max-width: 600px; }
+  .ba { display: grid; grid-template-columns: .76fr 30px 1.24fr; gap: 12px; align-items: center; }
+  .ba-lab { display: block; font: 600 11px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 10px; }
+  .ba-before { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+  .ba-after { min-width: 0; }
+  .file { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--bg-raised); border: 1px solid var(--border); border-radius: var(--r-lg); font-size: 11.5px; color: var(--ink-2); box-shadow: 0 1px 2px rgba(43,41,37,.06); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .file::before { content: ""; width: 11px; height: 13px; border-radius: 2px; background: var(--tc); flex: none; }
+  .file.xls { --tc: #3f8f5a; }
+  .file.doc { --tc: #4f7fb8; }
+  .file.pdf { --tc: #c2574a; }
+  .file.mail { --tc: #9a958a; }
+  .file.chat { --tc: #3bb26b; background: var(--wa-out); border-radius: 10px; border-top-left-radius: 3px; font-style: italic; }
+  .file:nth-child(3) { transform: rotate(-1.2deg) translateX(5px); }
+  .file:nth-child(5) { transform: rotate(1deg) translateX(-4px); }
+  .file:nth-child(7) { transform: rotate(-.8deg) translateX(7px); }
+  .ba-arrow { height: 1px; background: var(--ink-4); position: relative; margin-top: 22px; }
+  .ba-arrow::after { content: ""; position: absolute; right: -1px; top: 50%; transform: translateY(-50%); border-top: 4px solid transparent; border-bottom: 4px solid transparent; border-left: 7px solid var(--ink-4); }
+  .opp { background: var(--bg-raised); border: 1px solid var(--border); border-radius: var(--r-xl); box-shadow: var(--shadow); padding: 13px 15px; font-size: 11.5px; color: var(--ink); }
+  .opp-h { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding-bottom: 9px; border-bottom: 1px solid var(--border); }
+  .opp-h b { font-weight: 600; font-size: 12.5px; }
+  .opp-h small { display: block; margin-top: 2px; color: var(--ink-3); font-family: var(--font-mono); font-size: 9.5px; }
+  .opp-r { display: grid; grid-template-columns: 84px 1fr auto; gap: 8px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border-subtle); }
+  .opp-r:last-of-type { border-bottom: 0; }
+  .opp-r em { font-style: normal; font: 600 9.5px var(--font-ui); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+  .opp-r > span:not(.chip) { color: var(--ink-2); min-width: 0; line-height: 1.35; }
+  .opp-r span b { color: var(--ink); font-weight: 600; }
+  .opp .chip { font-size: 9.5px; padding: 2px 8px; }
+  .opp-f { margin-top: 6px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 10.5px; color: var(--ink-3); }
+  .hero-ba-cap { margin-top: 14px; font-size: 13.5px; color: var(--ink-3); max-width: 46ch; }
+  @media (max-width: 560px) {
+    .ba { grid-template-columns: 1fr; gap: 10px; }
+    .ba-arrow { width: 1px; height: 22px; justify-self: center; margin-top: 0; }
+    .ba-arrow::after { right: auto; left: 50%; top: auto; bottom: -1px; transform: translateX(-50%); border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 7px solid var(--ink-4); border-bottom: 0; }
+    .file:nth-child(n) { transform: none; }
+    .opp-r { grid-template-columns: 1fr auto; }
+    .opp-r em { grid-column: 1 / -1; padding-top: 2px; }
+    .opp-r { padding: 6px 0; }
+  }
+
+  /* ============ QUÉ REEMPLAZA ============ */
+  .swap-head { display: grid; grid-template-columns: 1fr 56px 1fr; gap: 24px; margin-top: 44px; padding-bottom: 10px; border-bottom: 1px solid var(--border); font: 600 12px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+  .swap-head span:last-child { color: var(--accent); }
+  .swap { list-style: none; margin: 0; padding: 0; counter-reset: swap; }
+  .swap li { display: grid; grid-template-columns: 1fr 56px 1fr; gap: 24px; padding: 26px 0; border-bottom: 1px solid var(--border); align-items: center; counter-increment: swap; }
+  .swap-today { padding-right: 8px; position: relative; }
+  .swap-today::before { content: "0" counter(swap); position: absolute; right: 100%; margin-right: 18px; top: 2px; font: 600 11px var(--font-mono); color: var(--ink-4); }
+  .tool { display: inline-flex; align-items: center; gap: 7px; font: 600 11.5px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
+  .tool::before { content: ""; width: 10px; height: 12px; border-radius: 2px; background: var(--tc); flex: none; }
+  .tool.xls { --tc: #3f8f5a; } .tool.doc { --tc: #4f7fb8; } .tool.pdf { --tc: #c2574a; } .tool.mail { --tc: #9a958a; } .tool.chat { --tc: #3bb26b; }
+  .swap h3 { font-family: var(--font-ui); font-size: 17px; font-weight: 600; letter-spacing: 0; margin-top: 8px; }
+  .swap p { margin-top: 5px; font-size: 15px; color: var(--ink-2); max-width: 52ch; }
+  .swap-today h3 { color: var(--ink-2); text-decoration: line-through; text-decoration-color: var(--ink-4); text-decoration-thickness: 1.5px; }
+  .swap-arrow { height: 1px; background: var(--ink-4); position: relative; }
+  .swap-arrow::after { content: ""; position: absolute; right: -1px; top: 50%; transform: translateY(-50%); border-top: 4px solid transparent; border-bottom: 4px solid transparent; border-left: 7px solid var(--ink-4); }
+  .swap-tratto { background: var(--bg-raised); border: 1px solid var(--border); border-radius: var(--r-xl); padding: 18px 22px 20px; }
+  .swap-tratto .chip { font-size: 11px; padding: 4px 10px; }
+  .swap-foot { margin-top: 28px; font-size: 17px; color: var(--ink-2); max-width: 60ch; }
+  .swap-foot b { color: var(--ink); font-weight: 600; }
+  @media (max-width: 1160px) { .swap-today::before { position: static; display: block; margin: 0 0 8px; } }
+  @media (max-width: 760px) {
+    .swap-head { display: none; }
+    .swap { margin-top: 36px; border-top: 1px solid var(--border); }
+    .swap li { grid-template-columns: 1fr; gap: 12px; padding: 22px 0; }
+    .swap-arrow { width: 1px; height: 22px; justify-self: center; }
+    .swap-arrow::after { right: auto; left: 50%; top: auto; bottom: -1px; transform: translateX(-50%); border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 7px solid var(--ink-4); border-bottom: 0; }
+    .swap-tratto { padding: 16px 18px 18px; }
+    .swap h3 { font-size: 16px; }
+    .swap p { font-size: 14.5px; }
+  }
+
+  /* Mock del portal dentro de Casos de uso */
+  .fig-head { margin-top: 64px; }
+  .fig-head h3 { font-size: clamp(22px, 2.6vw, 30px); font-weight: 600; line-height: 1.15; margin-top: 10px; }
+  .portal-fig { margin: 24px 0 0; }
+  @media (max-width: 640px) { .fig-head { margin-top: 48px; } }
 
   /* ============ SECTIONS ============ */
   section.block { padding: 96px 0 0; }
@@ -437,12 +549,47 @@
   @media (max-width: 860px) { .section-head { flex-direction: column; align-items: flex-start; gap: 16px; } }
 
   /* Etapas como features */
-  .stages { list-style: none; margin: 44px 0 0; padding: 0; border-top: 1px solid var(--border); }
-  .stages li { display: grid; grid-template-columns: 200px 1fr; gap: 20px 32px; padding: 20px 0; border-bottom: 1px solid var(--border); align-items: start; }
+  .stages-note { margin: 36px 0 0; padding: 12px 16px; border-left: 3px solid var(--accent); background: var(--bg-sunken); border-radius: 0 var(--r-lg) var(--r-lg) 0; font-size: 14.5px; color: var(--ink-2); max-width: 78ch; }
+  .stages-note b { color: var(--ink); font-weight: 600; }
+  .stages { list-style: none; margin: 20px 0 0; padding: 0; border-top: 1px solid var(--border); }
+  .stages li { display: grid; grid-template-columns: 200px 1fr 300px; gap: 20px 32px; padding: 20px 0; border-bottom: 1px solid var(--border); align-items: start; }
   .stages .chip { font-size: 12px; padding: 5px 12px; margin-top: 2px; justify-self: start; }
   .stages h3 { font-family: var(--font-ui); font-size: 17px; font-weight: 600; letter-spacing: 0; }
   .stages p { margin-top: 5px; font-size: 15px; color: var(--ink-2); max-width: 62ch; }
-  @media (max-width: 640px) { .stages li { grid-template-columns: 1fr; gap: 10px; } }
+  @media (max-width: 1000px) { .stages li { grid-template-columns: 200px 1fr; } .stages .mini { grid-column: 1 / -1; max-width: 440px; } }
+  @media (max-width: 640px) { .stages li { grid-template-columns: 1fr; gap: 10px; } .stages .mini { max-width: none; margin-top: 4px; } }
+
+  /* ============ MINI ESCENAS POR ETAPA ============ */
+  .stages .mini { position: relative; display: flex; flex-direction: column; gap: 6px; min-height: 172px; padding: 12px 14px; background: var(--bg-raised); border: 1px solid var(--border); border-radius: var(--r-xl); box-shadow: 0 1px 2px rgba(43,41,37,.05); font-size: 11.5px; color: var(--ink); line-height: 1.4; }
+  .mini .mh { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border-subtle); font-size: 10.5px; color: var(--ink-3); }
+  .mini .mh b { color: var(--ink); font-weight: 600; font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mini .mr { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--border-subtle); }
+  .mini .mr:last-child { border-bottom: 0; }
+  .mini .g { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mini .n { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 10.5px; color: var(--ink-2); white-space: nowrap; }
+  .mini .mute { color: var(--ink-3); font-size: 10.5px; white-space: nowrap; }
+  .stages .mini .chip { font-size: 9.5px; padding: 2px 8px; margin: 0; }
+  .mini .btn-m { display: inline-flex; align-items: center; font: 600 10.5px var(--font-ui); padding: 4px 10px; border-radius: var(--r-pill); background: var(--accent); color: var(--accent-ink); white-space: nowrap; }
+  .mini .bar { position: relative; height: 6px; border-radius: 3px; background: var(--bg-sunken); overflow: hidden; }
+  .mini .bar i { position: absolute; top: 0; bottom: 0; left: 0; width: var(--w, 100%); background: var(--accent); border-radius: 3px; transition: width 1.4s cubic-bezier(.2,.7,.2,1); }
+  .mini .doc { background: var(--bg-sunken); border-radius: var(--r-lg); padding: 9px 11px; font-size: 10.5px; }
+  .mini .doc .dl { display: flex; justify-content: space-between; gap: 10px; padding: 2px 0; color: var(--ink-2); }
+  .mini .doc .dl.hd { color: var(--ink); font-weight: 600; padding-bottom: 5px; margin-bottom: 3px; border-bottom: 1px solid var(--border); }
+  .mini .doc .dl.hd .logo { display: inline-block; width: 26px; height: 10px; border-radius: 2px; background: var(--ink-4); vertical-align: -1px; margin-right: 6px; }
+  .mini .doc .dt { display: flex; justify-content: space-between; font-weight: 600; color: var(--ink); border-top: 1px solid var(--border); margin-top: 4px; padding-top: 4px; }
+  .mini .doc .dw { font-style: italic; color: var(--ink-3); font-size: 10px; margin-top: 3px; }
+  .mini .note { align-self: flex-end; max-width: 92%; padding: 6px 9px; background: var(--wa-out); border-radius: 8px; border-top-right-radius: 3px; font-size: 11px; }
+  .mini .sys { font-size: 10.5px; color: var(--ink-3); text-align: center; padding: 2px 0; }
+  .mini .sys b { color: var(--ink-2); font-weight: 600; }
+  .mini .mf { margin-top: auto; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding-top: 6px; font-size: 10.5px; color: var(--ink-3); }
+  .mini .mf b { color: var(--ink); font-weight: 600; }
+  /* motor: [data-t] aparece a los t ms; [data-hide] desaparece a los h ms; .sw alterna con display */
+  .mini.play [data-t] { opacity: 0; transform: translateY(5px); transition: opacity .35s ease, transform .35s cubic-bezier(.2,.7,.2,1); }
+  .mini.play [data-t].show { opacity: 1; transform: none; }
+  .mini.play .sw[data-t] { display: none; } .mini.play .sw[data-t].show { display: inline-flex; }
+  .mini.play .gone { display: none !important; }
+  .mini.play .bar i { width: 0; } .mini.play .bar i.show { width: var(--w, 100%); }
+  .mini:not(.play) [data-hide] { display: none; }
 
   /* Killer feature: WhatsApp */
   .killer { display: grid; grid-template-columns: 1.15fr 1fr; gap: 40px; align-items: center; margin-top: 72px; padding: 40px; border-radius: var(--r-2xl); background: var(--bg-sunken); border: 1px solid var(--border); }
@@ -552,14 +699,6 @@
   }
 
   /* Fundador */
-  .founder { margin-top: 64px; padding: 40px; border-radius: var(--r-2xl); background: var(--bg-sunken); border: 1px solid var(--border); display: grid; grid-template-columns: 148px 1fr; gap: 36px; align-items: start; }
-  .founder-photo { width: 148px; height: 148px; border-radius: 16px; overflow: hidden; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-family: var(--font-display); font-size: 48px; font-weight: 600; letter-spacing: -0.03em; }
-  .founder-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .founder h2 { font-size: clamp(24px, 3vw, 32px); margin-top: 10px; }
-  .founder .body { margin-top: 16px; font-size: 16.5px; max-width: 60ch; }
-  .founder .body + .body { margin-top: 12px; }
-  .founder-links { margin-top: 22px; display: flex; flex-wrap: wrap; gap: 10px; }
-  @media (max-width: 720px) { .founder { grid-template-columns: 1fr; padding: 26px 20px; gap: 20px; } .founder-photo { width: 96px; height: 96px; font-size: 32px; border-radius: 12px; } .founder .body { font-size: 15.5px; } }
 
   /* Preguntas frecuentes */
   .faq { margin-top: 64px; display: grid; grid-template-columns: 1fr 1.6fr; gap: 40px; align-items: start; }
@@ -580,8 +719,8 @@
 
   /* Motion: solo la entrada del hero */
   @media (prefers-reduced-motion: no-preference) {
-    .hero-copy > *, .hero-wa, .hero-fig { animation: rise .7s cubic-bezier(.2,.7,.2,1) both; }
-    .hero h1 { animation-delay: .05s; } .hero .lede { animation-delay: .12s; } .hero .cta { animation-delay: .18s; } .hero-wa { animation-delay: .25s; } .hero-fig { animation-delay: .35s; }
+    .hero-copy > *, .hero-ba { animation: rise .7s cubic-bezier(.2,.7,.2,1) both; }
+    .hero h1 { animation-delay: .05s; } .hero .lede { animation-delay: .12s; } .hero .cta { animation-delay: .18s; } .hero-ba { animation-delay: .25s; }
     @keyframes rise { from { opacity: .001; transform: translateY(10px); } to { opacity: 1; transform: none; } }
   }
 </style>
@@ -595,7 +734,6 @@
       <a class="quiet" href="#flujo">Cómo funciona</a>
       <a class="quiet" href="#casos">Casos de uso</a>
       <a class="quiet" href="#precio">Precio</a>
-      <a class="quiet" href="#quien">Quién lo hace</a>
       <a class="btn btn-primary" data-wa href="https://wa.me/5213349424216?text=Hola%2C%20quiero%20ver%20Tratto" rel="noopener"><span class="long">Escríbenos por WhatsApp</span><span class="short">WhatsApp</span></a>
     </nav>
   </div>
@@ -607,12 +745,11 @@
   <section class="hero">
     <div class="hero-grid">
       <div class="hero-copy">
-        <p class="eyebrow">Hecho a mano para pequeñas y medianas empresas</p>
-        <h1>El sistema operativo <em>de tu negocio.</em></h1>
-        <p class="lede">Oportunidades, costeo, cotizaciones, proyectos y cobranza en un solo lugar. Tu equipo lo usa desde WhatsApp. Y lo construimos con tu gente, para que funcione como ya trabajan.</p>
+        <h1>Tu venta vive repartida en Excel, WhatsApp y correo. <em>Tratto la junta en un solo lugar.</em></h1>
+        <p class="lede">Costeas en Excel, pasas las cifras a Word, mandas el PDF por correo, das seguimiento por WhatsApp y la entrega la llevas en otro grupo. Cuando alguien pregunta "¿en qué quedó eso?", hay que buscar en cinco lugares. Tratto es un portal hecho para tu empresa donde cada venta avanza por etapas, de la cotización a la entrega y el cobro.</p>
         <div class="cta">
           <a class="btn btn-primary btn-lg" data-wa href="https://wa.me/5213349424216?text=Hola%2C%20quiero%20ver%20Tratto" rel="noopener">Escríbenos por WhatsApp</a>
-          <a class="btn btn-ghost btn-lg" href="#casos">Ver los casos de uso</a>
+          <a class="btn btn-ghost btn-lg" href="#reemplaza">Ver qué reemplaza</a>
         </div>
         <p class="hero-proof" aria-label="Datos de un portal en producción">
           <span><b>865</b> oportunidades administradas</span>
@@ -620,19 +757,320 @@
           <span>Listo en <b>5 semanas</b></span>
         </p>
       </div>
-      <div class="hero-wa">
-        <div class="wa" aria-label="Un vendedor crea una oportunidad desde WhatsApp">
-          <div class="wa-head"><i></i><div><b>Tratto</b><small>asistente · en línea</small></div></div>
-          <div class="b out">Nueva oportunidad: uniformes operativos 2026 para Policía Estatal de Guanajuato, 340 elementos, cierre 30 de septiembre<small>09:14</small></div>
-          <div class="b in">Creada <b>OPP-0387 · Uniformes operativos 2026, Policía Estatal</b>.<br>Institución: SSP Guanajuato · Vendedor: tú · Cierre: 30 sep · Etapa: Nueva oportunidad.<br>¿Le paso el catálogo a compras para costear?<small>09:14</small></div>
-          <div class="b out">Sí, y avísale a Emily<small>09:15</small></div>
-          <div class="b in">Listo. Emily Torres ya tiene la mención y la actividad <b>Confirmar precios de proveedor</b> con fecha 1 sep.<small>09:15</small></div>
+      <figure class="hero-ba" aria-label="Hoy: siete archivos y un chat. En Tratto: un expediente por venta, de la cotización a la entrega.">
+        <div class="ba">
+          <div class="ba-before">
+            <span class="ba-lab">Hoy</span>
+            <div class="file xls">costeo-policia-v3-FINAL.xlsx</div>
+            <div class="file doc">Cotización Policía Estatal.docx</div>
+            <div class="file pdf">COT-387 (2).pdf</div>
+            <div class="file mail">RE: RE: RE: cotización uniformes</div>
+            <div class="file chat">"¿ya se mandó la cotización?"</div>
+            <div class="file pdf">OC-firmada-escaneada.pdf</div>
+            <div class="file xls">cobranza-2026.xlsx</div>
+          </div>
+          <div class="ba-arrow" aria-hidden="true"></div>
+          <div class="ba-after">
+            <span class="ba-lab">En Tratto</span>
+            <div class="opp">
+              <div class="opp-h"><div><b>Uniformes, Policía Estatal</b><small>OPP-0387 · Ángel · cierre 30 sep</small></div><span class="chip seguimiento">En negociación</span></div>
+              <div class="opp-r"><em>Costeo</em><span>38 líneas · utilidad <b>18.4%</b></span><span class="chip ok">validado</span></div>
+              <div class="opp-r"><em>Cotización</em><span><b>V2</b> vigente, con membrete</span><span class="chip ok">enviada</span></div>
+              <div class="opp-r"><em>Documentos</em><span>bases, anexo, V1 y V2</span><span class="chip nueva">5 archivos</span></div>
+              <div class="opp-r"><em>Seguimiento</em><span>Muestras · Ángel · 17 sep</span><span class="chip prog">en curso</span></div>
+              <div class="opp-r"><em>Entrega</em><span>2 OC firmadas · tallas cuadran</span><span class="chip prog">1 de 2</span></div>
+              <div class="opp-r"><em>Cobranza</em><span>Anticipo 30% cobrado</span><span class="chip validacion">vence 30 nov</span></div>
+              <div class="opp-f">Última nota: Ángel, por WhatsApp, hoy 11:02 · "Cliente confirma 340 elementos"</div>
+            </div>
+          </div>
         </div>
-        <p class="hero-wa-cap">Tu vendedor manda un WhatsApp. La oportunidad aparece en el portal al instante, con folio y responsable.</p>
-      </div>
+        <figcaption class="hero-ba-cap">Lo que hoy está en siete archivos y un chat, en un expediente por venta: de la cotización a la entrega y el cobro. Cualquiera del equipo lo abre y sabe en qué va.</figcaption>
+      </figure>
     </div>
 
-    <figure class="wide hero-fig" aria-label="Vista del portal: una oportunidad abierta. Cambia entre un negocio B2B y una constructora, y recorre las pestañas.">
+
+    <div class="wide proof" aria-label="Cifras reales de un portal en producción">
+      <p class="proof-head">Cifras reales de un portal, hoy.</p>
+      <div class="stats">
+        <div><b>27</b><span>personas usando el portal</span></div>
+        <div><b>865</b><span>oportunidades administradas</span></div>
+        <div><b>4,025</b><span>líneas cotizadas y costeadas</span></div>
+        <div><b>235</b><span>órdenes de compra a proveedor</span></div>
+        <div><b>112</b><span>documentos firmados electrónicamente</span></div>
+        <div><b>2,507</b><span>notificaciones enviadas al equipo</span></div>
+      </div>
+      <!-- BORRADOR: esta cita hay que validarla con el cliente (texto y atribución). Está oculta con `hidden` hasta que se apruebe; quita el atributo para mostrarla. -->
+      <figure class="quote" hidden>
+        <blockquote>Antes cada vendedor cotizaba en su Excel y yo me enteraba del margen cuando ya habíamos entregado. Hoy no sale una cotización sin que yo la valide, y la veo desde el celular.</blockquote>
+        <figcaption><b>Director General</b>Empresa de uniformes y equipo táctico para gobierno<br>Cliente desde julio de 2026</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ============ EL PROBLEMA: QUÉ REEMPLAZA ============ -->
+  <section class="block" id="reemplaza">
+    <div class="wide">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">El problema</p>
+          <h2>De cotizar a entregar,<br>todo en herramientas sueltas.</h2>
+        </div>
+        <p class="lede">No es que Excel esté mal. Es que cada paso, desde el costeo hasta la entrega y el cobro, vive en un lugar distinto, y nadie ve la venta completa. Esto es lo que Tratto reemplaza, paso por paso.</p>
+      </div>
+      <div class="swap-head" aria-hidden="true"><span>Hoy</span><span></span><span>En Tratto</span></div>
+      <ol class="swap">
+        <li>
+          <div class="swap-today">
+            <span class="tool xls">Excel</span>
+            <h3>Costear</h3>
+            <p>Un archivo por cotización, con fórmulas que solo entiende quien lo hizo. Versiones "v3-FINAL-ahora-sí", y la utilidad a la vista de quien tenga el archivo.</p>
+          </div>
+          <div class="swap-arrow" aria-hidden="true"></div>
+          <div class="swap-tratto">
+            <span class="chip coste">En costeo</span>
+            <h3>El costeo vive dentro de la oportunidad</h3>
+            <p>Con tus fórmulas, línea por línea. La utilidad se calcula sola, dirección la valida, y la ve solo quien tú decidas.</p>
+          </div>
+        </li>
+        <li>
+          <div class="swap-today">
+            <span class="tool doc">Word y PDF</span>
+            <h3>Cotizar</h3>
+            <p>Copias las cifras del Excel a Word, exportas el PDF, lo renombras "(2)" y lo guardas en una carpeta que nadie encuentra. Si cambia una cantidad, todo de nuevo.</p>
+          </div>
+          <div class="swap-arrow" aria-hidden="true"></div>
+          <div class="swap-tratto">
+            <span class="chip seguimiento">Cotizada</span>
+            <h3>PDF con tu membrete, en un clic</h3>
+            <p>Sale del costeo, sin copiar nada. Monto en letras y versiones V1, V2, V3: la vigente es la que tiene el cliente, las anteriores se guardan.</p>
+          </div>
+        </li>
+        <li>
+          <div class="swap-today">
+            <span class="tool mail">Correo</span>
+            <h3>Enviar y archivar</h3>
+            <p>Cadenas de RE: RE: RE: con adjuntos. Las bases, el anexo y la cotización buena están en el correo de alguien que ya no trabaja aquí.</p>
+          </div>
+          <div class="swap-arrow" aria-hidden="true"></div>
+          <div class="swap-tratto">
+            <span class="chip accent">Documentación</span>
+            <h3>Cada documento en la carpeta de su venta</h3>
+            <p>Bases, anexos, cotizaciones, órdenes de compra. Lo sube uno y lo encuentra cualquiera del equipo que tenga permiso.</p>
+          </div>
+        </li>
+        <li>
+          <div class="swap-today">
+            <span class="tool chat">WhatsApp interno</span>
+            <h3>Dar seguimiento</h3>
+            <p>"¿Ya se mandó?" "¿Quién tiene las tallas?" Se pierde entre los mensajes de la familia, y al mes nadie sabe en qué quedó.</p>
+          </div>
+          <div class="swap-arrow" aria-hidden="true"></div>
+          <div class="swap-tratto">
+            <span class="chip seguimiento">En negociación</span>
+            <h3>Las notas quedan en el expediente</h3>
+            <p>Tu equipo sigue usando WhatsApp, pero cada nota se guarda con fecha y responsable. Y los avisos llegan solos: te asignaron algo, venció un cobro.</p>
+          </div>
+        </li>
+        <li>
+          <div class="swap-today">
+            <span class="tool pdf">PDF, Excel y WhatsApp</span>
+            <h3>Entregar</h3>
+            <p>Ganaste, y ahora la orden de compra al proveedor va en un PDF firmado a mano y escaneado, las tallas en otro Excel y las entregas se avisan en un grupo. Lo cotizado y lo entregado ya no cuadran.</p>
+          </div>
+          <div class="swap-arrow" aria-hidden="true"></div>
+          <div class="swap-tratto">
+            <span class="chip ganada">Ganada</span>
+            <h3>La venta se vuelve proyecto, en el mismo expediente</h3>
+            <p>Órdenes de compra a proveedor con firma electrónica, tallas, inventario y entregas. O contrato, extraordinarias y estimaciones si cotizas obra. Todo cuadra contra lo que se cotizó.</p>
+          </div>
+        </li>
+        <li>
+          <div class="swap-today">
+            <span class="tool xls">Excel</span>
+            <h3>Cobrar</h3>
+            <p>Otro archivo con lo que se cobró y lo que falta, actualizado cuando alguien se acuerda. Los vencidos se descubren tarde.</p>
+          </div>
+          <div class="swap-arrow" aria-hidden="true"></div>
+          <div class="swap-tratto">
+            <span class="chip ok">Cobrado</span>
+            <h3>Estado de cuenta por proyecto</h3>
+            <p>Cobrado, pendiente y vencido, con abonos parciales. Aviso por WhatsApp cuando algo vence. Se exporta a PDF o Excel.</p>
+          </div>
+        </li>
+      </ol>
+      <p class="swap-foot">Y todo eso es <b>un solo expediente por venta</b> que avanza por etapas, desde la oportunidad hasta la entrega y el cobro. Por eso no es solo un CRM: también lleva el proyecto. Abajo, cómo se ve cada etapa.</p>
+    </div>
+  </section>
+
+  <!-- ============ CÓMO FUNCIONA: POR ETAPA ============ -->
+  <section class="block" id="flujo">
+    <div class="wide">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Cómo funciona</p>
+          <h2>Cada paso de tu venta<br>tiene su lugar.</h2>
+        </div>
+        <p class="lede">Lo que hoy está repartido en cinco herramientas, en Tratto avanza por etapas. En cada etapa tienes lo que necesitas para cerrarla, y ves de un vistazo en cuál va cada venta.</p>
+      </div>
+      <p class="stages-note"><b>Cada negocio tiene sus propias etapas.</b> Las de abajo son las de una empresa que vende uniformes a gobierno. Una constructora lleva catálogo del cliente, receta, contrato y estimaciones. Las tuyas se definen contigo en las entrevistas.</p>
+      <ol class="stages">
+        <li><span class="chip nueva">Nueva oportunidad</span><div><h3>Entra con todo lo que hace falta</h3><p>Se crea desde el portal o con un WhatsApp: "nueva oportunidad para Policía Estatal, 340 elementos, cierre 30 sep". Queda con folio, cliente, vendedor y fecha. Si el cliente mandó su lista en Excel o PDF, la subes y queda lista para costear.</p></div><div class="mini" data-loop="8000" aria-hidden="true">
+          <div class="mh"><b>OPP-0387 · Uniformes, Policía Estatal</b><span class="chip nueva">Nueva</span></div>
+          <div class="mr" data-t="400"><span class="g">lista-policia-estatal.xlsx</span><span class="mute">del cliente · 38 líneas</span></div>
+          <div class="bar" data-t="900"><i style="--w:100%" data-t="1000"></i></div>
+          <div class="mr" data-t="2600"><span class="g">Chamarra táctica softshell</span><span class="n">340 pzas</span></div>
+          <div class="mr" data-t="2900"><span class="g">Chaleco portaplacas</span><span class="n">120 pzas</span></div>
+          <div class="mr" data-t="3200"><span class="g">Bota táctica, piel</span><span class="n">340 pzas</span></div>
+          <div class="mf" data-t="3900"><span><b>38 líneas</b> importadas, listas para costear</span><span class="chip ok">1 minuto</span></div>
+        </div></li>
+        <li><span class="chip coste">En costeo</span><div><h3>Cada línea con su costo real</h3><p>Compras confirma insumos, mano de obra y precios de proveedor. La utilidad se calcula sola, y la ve solo quien tú decidas.</p></div><div class="mini" data-loop="8500" aria-hidden="true">
+          <div class="mh"><b>Costeo · 38 líneas</b><span class="chip coste">En costeo</span></div>
+          <div class="mr"><span class="g">Chamarra táctica softshell</span><span class="n">$1,240.00</span><span class="chip coste sw" data-hide="1400">cotizando</span><span class="chip ok sw" data-t="1400">confirmado</span></div>
+          <div class="mr"><span class="g">Chaleco portaplacas</span><span class="n">$2,890.00</span><span class="chip coste sw" data-hide="2400">cotizando</span><span class="chip ok sw" data-t="2400">confirmado</span></div>
+          <div class="mr"><span class="g">Bota táctica, piel</span><span class="n">$1,560.00</span><span class="chip coste sw" data-hide="3400">cotizando</span><span class="chip ok sw" data-t="3400">confirmado</span></div>
+          <div class="sys" data-t="4000">Emily Torres confirmó 3 precios de proveedor</div>
+          <div class="mf" data-t="4700"><span>Utilidad <b>18.4%</b>, calculada sola</span><span class="mute">la ve solo dirección</span></div>
+        </div></li>
+        <li><span class="chip validacion">Validación</span><div><h3>Nada se cotiza sin que dirección lo valide</h3><p>El portal avisa qué falta: líneas con poco margen, precios sin confirmar. Dirección revisa y aprueba, y queda un PDF con las cifras de ese momento.</p></div><div class="mini" data-loop="9000" aria-hidden="true">
+          <div class="mh"><b>Validación de costeo</b><span class="chip validacion sw" data-hide="4800">En validación</span><span class="chip ok sw" data-t="4800">Costeo confirmado</span></div>
+          <div class="mr"><span class="g">2 líneas bajo el margen mínimo</span><span class="chip validacion sw" data-hide="1800">revisar</span><span class="chip ok sw" data-t="1800">resuelto</span></div>
+          <div class="mr"><span class="g">Precios de proveedor</span><span class="chip validacion sw" data-hide="2600">1 sin confirmar</span><span class="chip ok sw" data-t="2600">confirmados</span></div>
+          <div class="mr"><span class="g">Margen a gobierno</span><span class="n">6.0%</span><span class="chip ok">ok</span></div>
+          <div class="mr" data-t="3400"><span class="g mute">Elena Vargas · Dirección</span><span class="btn-m">Validar costeo</span></div>
+          <div class="mf" data-t="4800"><span>PDF de validación · 09:31</span><span class="mute">cifras congeladas</span></div>
+        </div></li>
+        <li><span class="chip seguimiento">Cotizada</span><div><h3>PDF con tu membrete, en un clic</h3><p>Con monto en letras y versiones V1, V2, V3. La vigente es la que tiene el cliente; las anteriores se guardan, no se pierden.</p></div><div class="mini" data-loop="9000" aria-hidden="true">
+          <div class="mh"><b>Cotización OPP-0387</b><span><span class="chip nueva sw" data-hide="4400">V1 vigente</span><span class="chip seguimiento sw" data-t="4400">V2 vigente</span></span></div>
+          <div class="doc" data-t="300">
+            <div class="dl hd"><span><i class="logo"></i>Tu membrete</span><span>COT-0387</span></div>
+            <div class="dl" data-t="800"><span>340 · Chamarra táctica softshell</span><span>$521,560.00</span></div>
+            <div class="dl" data-t="1100"><span>120 · Chaleco portaplacas</span><span>$412,800.00</span></div>
+            <div class="dl" data-t="1400"><span>340 · Bota táctica, piel</span><span>$349,960.00</span></div>
+            <div class="dt" data-t="2000"><span>Total</span><span>$1,284,320.00 MXN</span></div>
+            <div class="dw" data-t="2400">Son: un millón doscientos ochenta y cuatro mil trescientos veinte pesos 00/100 M.N.</div>
+          </div>
+          <div class="mf" data-t="3200"><span class="btn-m">Generar PDF</span><span class="mute sw" data-t="4400">V1 archivada, no se pierde</span></div>
+        </div></li>
+        <li><span class="chip seguimiento">En negociación</span><div><h3>Seguimiento con fecha y responsable</h3><p>Tareas con fecha, recordatorios y cada nota del cliente en su expediente. Nadie tiene que preguntar "¿en qué quedó eso?".</p></div><div class="mini" data-loop="8500" aria-hidden="true">
+          <div class="mh"><b>Seguimiento · OPP-0387</b><span class="chip seguimiento">En negociación</span></div>
+          <div class="mr"><span class="g">Enviar muestras físicas</span><span class="mute">Ángel · <span class="sw" data-hide="1900">20 sep</span><span class="sw" data-t="1900">17 sep</span></span><span class="chip prog sw" data-hide="3200">en curso</span><span class="chip ok sw" data-t="3200">hecho</span></div>
+          <div class="mr"><span class="g">Llamar a compras</span><span class="mute">Ángel · 22 sep</span><span class="chip nueva sw" data-hide="3900">programado</span><span class="chip prog sw" data-t="3900">recordatorio</span></div>
+          <div class="note" data-t="1000">Cliente pide las muestras el 17, no el 20<span class="mute"> · Ángel, WhatsApp</span></div>
+          <div class="sys" data-t="1900">Fecha movida al 17 sep · aviso a Ángel y Emily</div>
+          <div class="mf" data-t="4600"><span>Nadie pregunta "¿en qué quedó eso?"</span><span class="mute">en el expediente</span></div>
+        </div></li>
+        <li><span class="chip ganada">Ganada</span><div><h3>El expediente se vuelve proyecto</h3><p>Órdenes de compra a proveedores con firma electrónica. Tallas, entregas, inventario o extraordinarias de obra, según tu negocio.</p></div><div class="mini" data-loop="9000" aria-hidden="true">
+          <div class="mh"><b>OPP-0387 · Uniformes, Policía Estatal</b><span class="chip seguimiento sw" data-hide="800">En negociación</span><span class="chip ganada sw" data-t="800">Ganada</span></div>
+          <div class="sys" data-t="1400">Proyecto <b>PRY-0142</b> creado a partir del expediente</div>
+          <div class="mr" data-t="2000"><span class="g">OC-0201 · Calzado Industrial</span><span class="n">$349,960</span><span class="chip validacion sw" data-hide="3400">por firmar</span><span class="chip ok sw" data-t="3400">firmada</span></div>
+          <div class="mr" data-t="2400"><span class="g">OC-0202 · Importadora Lux</span><span class="n">$49,440</span><span class="chip validacion sw" data-hide="4200">por firmar</span><span class="chip ok sw" data-t="4200">firmada</span></div>
+          <div class="mr" data-t="2800"><span class="g">Tallas por corporación</span><span class="n">340 pzas</span><span class="chip ok">todo cuadra</span></div>
+          <div class="mf" data-t="4900"><span>Firmas en orden: compras, dirección, proveedor</span></div>
+        </div></li>
+        <li><span class="chip ok">Cobrado</span><div><h3>Estado de cuenta por proyecto</h3><p>Qué se cobró, qué falta y qué ya venció, con abonos parciales. Se exporta a PDF o Excel.</p></div><div class="mini" data-loop="8500" aria-hidden="true">
+          <div class="mh"><b>Estado de cuenta · PRY-0142</b><span class="n">$1,284,320.00</span></div>
+          <div class="bar" data-t="300"><i style="--w:30%" data-t="600"></i><i style="--w:80%" data-t="2900"></i></div>
+          <div class="mr" data-t="900"><span class="g">Anticipo 30%</span><span class="n">$385,296</span><span class="chip ok">cobrado</span></div>
+          <div class="mr" data-t="1300"><span class="g">Contra entrega 50%</span><span class="n">$642,160</span><span class="chip prog sw" data-hide="2900">programado 15 oct</span><span class="chip ok sw" data-t="2900">cobrado</span></div>
+          <div class="mr" data-t="1700"><span class="g">Finiquito 20%</span><span class="n">$256,864</span><span class="chip validacion">vence 30 nov</span></div>
+          <div class="mf" data-t="3700"><span>Cobrado <b>80%</b> · vencido <b>$0</b></span><span class="mute">Exportar PDF · Excel</span></div>
+        </div></li>
+      </ol>
+
+      <div class="killer">
+        <div class="killer-text">
+          <p class="eyebrow">En todas las etapas</p>
+          <h2>Avisos y un asistente de IA en el WhatsApp de tu equipo.</h2>
+          <p class="lede">Un vendedor en la carretera no abre un tablero. Mencionas a alguien y le llega al WhatsApp. Preguntas cómo va una oportunidad y el asistente te contesta. Dictas una nota y queda guardada.</p>
+          <ul class="killer-list">
+            <li><b>Avisos que llegan solos:</b> te asignaron una tarea, venció un cobro, cambió una etapa.</li>
+            <li><b>Preguntas en lenguaje normal:</b> "¿qué tengo pendiente?", "¿cuánto llevamos cobrado de Planta Norte?".</li>
+            <li><b>Acciones desde el chat:</b> crear oportunidades, agregar notas, mencionar a alguien, cambiar etapa.</li>
+            <li><b>Y cuando sí abren el portal,</b> lo hacen desde el celular, como cualquier app.</li>
+          </ul>
+        </div>
+        <div class="hero-wa">
+          <div class="hero-stage" id="hero-stage">
+          <div class="wa" id="hero-demo" aria-label="Demo: un vendedor crea una oportunidad desde WhatsApp">
+            <div class="wa-head"><i></i><div><b>Tratto</b><small>asistente · en línea</small></div></div>
+            <div class="b out" data-step="1">Nueva oportunidad: uniformes para Policía Estatal, 340 elementos, cierre 30 sep<small>09:14</small></div>
+            <div class="slot">
+              <div class="typing" aria-hidden="true"><i></i><i></i><i></i></div>
+              <div class="b in" data-step="2">Creada <b>OPP-0387 · Uniformes, Policía Estatal</b>.<br>Vendedor: tú · Cierre: 30 sep · Etapa: Nueva oportunidad.<br>¿Le paso la lista a compras para costear?<small>09:14</small></div>
+            </div>
+            <div class="b out">Sí, y avísale a Emily<small>09:15</small></div>
+            <div class="slot">
+              <div class="typing" aria-hidden="true"><i></i><i></i><i></i></div>
+              <div class="b in" data-step="3">Listo. Emily ya tiene la tarea <b>Confirmar precios de proveedor</b> para el 1 sep. Le avisé por WhatsApp.<small>09:15</small></div>
+            </div>
+          </div>
+          <div class="pm" id="hero-portal" aria-hidden="true">
+            <div class="pm-top"><span>‹ Oportunidades</span><span class="pm-user"><i>E</i>Elena Vargas · Administración</span></div>
+            <div class="pm-title"><h4>Uniformes, Policía Estatal</h4><span class="chip nueva">Nueva oportunidad</span></div>
+            <div class="pm-meta">Folio <b class="mono">OPP-0387</b> · Vendedor <b>Ángel Ramos</b> · Compras <b>Emily Torres</b> · Cierre <b class="mono">30 sep</b></div>
+            <div class="pm-block"><small class="h">Actividades</small><div class="pm-act"><span class="grow">Confirmar precios de proveedor</span><span class="who">Emily Torres · 1 sep</span><span class="chip validacion">pendiente</span></div></div>
+            <div class="pm-block"><small class="h">Actualizaciones</small>
+              <div class="pm-post"><i>·</i><div><b>WhatsApp · Ángel Ramos</b> <small>09:14</small><p>Nueva oportunidad: uniformes para Policía Estatal, 340 elementos, cierre 30 sep.</p></div></div>
+              <div class="pm-post"><i>·</i><div><b>Portal</b> <small>09:15</small><p>Emily Torres mencionada. Aviso enviado por WhatsApp.</p></div></div>
+            </div>
+          </div>
+          <button type="button" class="replay">Ver de nuevo ↻</button>
+          </div>
+          <p class="hero-wa-cap" id="hero-demo-cap" data-s1="1 · Tu vendedor manda un WhatsApp, desde donde esté." data-s2="2 · La oportunidad ya existe en el portal, con folio y responsable." data-s3="3 · Compras recibe su tarea. Nadie tuvo que abrir nada." data-s4="4 · Y en el portal ya está todo: folio, responsable, fecha y tarea. Sin capturar nada.">Tu vendedor manda un WhatsApp. La oportunidad aparece en el portal al instante, con folio y responsable.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CASOS DE USO ============ -->
+  <section class="block" id="casos">
+    <div class="wide">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Casos de uso</p>
+          <h2>Dos negocios distintos,<br>dos portales distintos.</h2>
+        </div>
+        <p class="lede">Tratto nació en dos empresas reales: una que vende uniformes a gobierno y una constructora de obra eléctrica. Cada portal se construyó con su equipo, y por eso se parecen en la base y cambian en todo lo demás.</p>
+      </div>
+      <div class="cases">
+        <article class="card">
+          <p class="case-tag"><b>Si vendes productos</b> Negocios B2B y proveedores de gobierno</p>
+          <h3>Cada producto con su costo completo, su margen y sus tallas.</h3>
+          <div class="flow">
+            <span class="chip coste">Costeo por SKU</span><span class="sep"></span>
+            <span class="chip seguimiento">Licitación</span><span class="sep"></span>
+            <span class="chip ganada">Ganada</span><span class="sep"></span>
+            <span class="chip accent">Tallas y OC</span><span class="sep"></span>
+            <span class="chip ok">Entrega</span>
+          </div>
+          <ul>
+            <li><b>Costo completo por producto:</b> precio de distribuidor en dólares, descuento, gastos, bordados y margen.</li>
+            <li><b>Tallas por corporación</b> y el expediente de la licitación: bases, muestras, fianza.</li>
+            <li><b>Orden de compra por proveedor</b> con firma electrónica, inventario y entregas.</li>
+          </ul>
+        </article>
+        <article class="card">
+          <p class="case-tag"><b>Si cotizas obra</b> Constructoras e instaladores</p>
+          <h3>Cada partida con su receta de costo.</h3>
+          <div class="flow">
+            <span class="chip nueva">Catálogo del cliente</span><span class="sep"></span>
+            <span class="chip coste">Receta</span><span class="sep"></span>
+            <span class="chip seguimiento">Cotización</span><span class="sep"></span>
+            <span class="chip ganada">Contrato</span><span class="sep"></span>
+            <span class="chip ok">Estimaciones</span>
+          </div>
+          <ul>
+            <li><b>Receta por concepto:</b> insumos, mano de obra, maquinaria e indirectos. El costo sale de la receta, el precio lo pones tú.</li>
+            <li><b>Subes el catálogo del cliente,</b> aunque tenga 271 partidas, y sale listo para costear.</li>
+            <li><b>Contrato, extraordinarias y estimaciones</b> en el mismo expediente, con estado de cuenta por obra.</li>
+          </ul>
+        </article>
+      </div>
+      <div class="fig-head">
+        <p class="eyebrow">Así se ve por dentro</p>
+        <h3>Una oportunidad abierta. Cambia de negocio y recorre las pestañas.</h3>
+      </div>
+    <figure class="portal-fig" aria-label="Vista del portal: una oportunidad abierta. Cambia entre un negocio B2B y una constructora, y recorre las pestañas.">
       <div class="seg" role="tablist" aria-label="Elige el tipo de negocio">
         <span class="seg-label">Ver el portal de</span>
         <button type="button" role="tab" class="on" data-mock="b2b" aria-selected="true">Negocio B2B</button>
@@ -982,113 +1420,6 @@
       </div>
       <figcaption class="fig-cap"><b>Funciona en el celular.</b> Se abre como una app, sin instalar nada. Mismo portal, mismos permisos.</figcaption>
     </figure>
-
-    <div class="wide proof" aria-label="Cifras reales de un portal en producción">
-      <p class="proof-head">Cifras reales de un portal, hoy.</p>
-      <div class="stats">
-        <div><b>27</b><span>personas usando el portal</span></div>
-        <div><b>865</b><span>oportunidades administradas</span></div>
-        <div><b>4,025</b><span>líneas cotizadas y costeadas</span></div>
-        <div><b>235</b><span>órdenes de compra a proveedor</span></div>
-        <div><b>112</b><span>documentos firmados electrónicamente</span></div>
-        <div><b>2,507</b><span>notificaciones enviadas al equipo</span></div>
-      </div>
-      <!-- BORRADOR: esta cita hay que validarla con el cliente (texto y atribución). Está oculta con `hidden` hasta que se apruebe; quita el atributo para mostrarla. -->
-      <figure class="quote" hidden>
-        <blockquote>Antes cada vendedor cotizaba en su Excel y yo me enteraba del margen cuando ya habíamos entregado. Hoy no sale una cotización sin que yo la valide, y la veo desde el celular.</blockquote>
-        <figcaption><b>Director General</b>Empresa de uniformes y equipo táctico para gobierno<br>Cliente desde julio de 2026</figcaption>
-      </figure>
-    </div>
-  </section>
-
-  <!-- ============ CÓMO FUNCIONA: POR ETAPA ============ -->
-  <section class="block" id="flujo">
-    <div class="wide">
-      <div class="section-head">
-        <div>
-          <p class="eyebrow">Cómo funciona</p>
-          <h2>Cada paso de tu venta<br>tiene su lugar.</h2>
-        </div>
-        <p class="lede">Hoy tu venta vive repartida entre Excel, WhatsApp y correo. En Tratto avanza por etapas, y en cada etapa tienes lo que necesitas para cerrarla.</p>
-      </div>
-      <ol class="stages">
-        <li><span class="chip nueva">Nueva oportunidad</span><div><h3>Entra con todo lo que hace falta</h3><p>Se crea desde el portal o con un WhatsApp: "nueva oportunidad para Policía Estatal, 340 elementos, cierre 30 sep". Queda con folio, cliente, vendedor y fecha. Si el cliente mandó su lista en Excel o PDF, la subes y queda lista para costear.</p></div></li>
-        <li><span class="chip coste">En costeo</span><div><h3>Cada línea con su costo real</h3><p>Compras confirma insumos, mano de obra y precios de proveedor. La utilidad se calcula sola, y la ve solo quien tú decidas.</p></div></li>
-        <li><span class="chip validacion">Validación</span><div><h3>Nada se cotiza sin que dirección lo valide</h3><p>El portal avisa qué falta: líneas con poco margen, precios sin confirmar. Dirección revisa y aprueba, y queda un PDF con las cifras de ese momento.</p></div></li>
-        <li><span class="chip seguimiento">Cotizada</span><div><h3>PDF con tu membrete, en un clic</h3><p>Con monto en letras y versiones V1, V2, V3. La vigente es la que tiene el cliente; las anteriores se guardan, no se pierden.</p></div></li>
-        <li><span class="chip seguimiento">En negociación</span><div><h3>Seguimiento con fecha y responsable</h3><p>Tareas con fecha, recordatorios y cada nota del cliente en su expediente. Nadie tiene que preguntar "¿en qué quedó eso?".</p></div></li>
-        <li><span class="chip ganada">Ganada</span><div><h3>El expediente se vuelve proyecto</h3><p>Órdenes de compra a proveedores con firma electrónica. Tallas, entregas, inventario o extraordinarias de obra, según tu negocio.</p></div></li>
-        <li><span class="chip ok">Cobrado</span><div><h3>Estado de cuenta por proyecto</h3><p>Qué se cobró, qué falta y qué ya venció, con abonos parciales. Se exporta a PDF o Excel.</p></div></li>
-      </ol>
-
-      <div class="killer">
-        <div class="killer-text">
-          <p class="eyebrow">En todas las etapas</p>
-          <h2>Avisos y un asistente de IA en el WhatsApp de tu equipo.</h2>
-          <p class="lede">Un vendedor en la carretera no abre un tablero. Mencionas a alguien y le llega al WhatsApp. Preguntas cómo va una oportunidad y el asistente te contesta. Dictas una nota y queda guardada.</p>
-          <ul class="killer-list">
-            <li><b>Avisos que llegan solos:</b> te asignaron una tarea, venció un cobro, cambió una etapa.</li>
-            <li><b>Preguntas en lenguaje normal:</b> "¿qué tengo pendiente?", "¿cuánto llevamos cobrado de Planta Norte?".</li>
-            <li><b>Acciones desde el chat:</b> crear oportunidades, agregar notas, mencionar a alguien, cambiar etapa.</li>
-            <li><b>Y cuando sí abren el portal,</b> lo hacen desde el celular, como cualquier app.</li>
-          </ul>
-        </div>
-        <div class="wa" aria-label="Conversación de WhatsApp con el asistente">
-          <span class="day">Hoy</span>
-          <div class="b in"><b>Tratto</b><br>Te asignaron <b>Enviar muestras físicas</b> en OPP-0387 · Policía Estatal. Fecha límite: 18 sep.<small>08:31</small></div>
-          <div class="b out">¿Cómo va la 0387?<small>10:42</small></div>
-          <div class="b in"><b>OPP-0387 · Uniformes operativos 2026</b><br>Etapa: Costeo confirmado. Falta generar la cotización y enviar muestras antes del 20 sep. Cierre estimado: 30 sep.<br>Última nota (Emily, hoy): "Chamarra sí hay en almacén León, bota la pido hoy".<small>10:42</small></div>
-          <div class="b out">Agrega nota: cliente confirma 340 elementos y 120 chalecos, cierre 30 sep<small>10:43</small></div>
-          <div class="b in">Listo, nota agregada a OPP-0387. Le avisé a Emily Torres y a Elena Vargas por mención.<small>10:43</small></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ CASOS DE USO ============ -->
-  <section class="block" id="casos">
-    <div class="wide">
-      <div class="section-head">
-        <div>
-          <p class="eyebrow">Casos de uso</p>
-          <h2>Dos negocios distintos,<br>dos portales distintos.</h2>
-        </div>
-        <p class="lede">Tratto nació en dos empresas reales: una que vende uniformes a gobierno y una constructora de obra eléctrica. Cada portal se construyó con su equipo, y por eso se parecen en la base y cambian en todo lo demás.</p>
-      </div>
-      <div class="cases">
-        <article class="card">
-          <p class="case-tag"><b>Si vendes productos</b> Negocios B2B y proveedores de gobierno</p>
-          <h3>Cada producto con su costo completo, su margen y sus tallas.</h3>
-          <div class="flow">
-            <span class="chip coste">Costeo por SKU</span><span class="sep"></span>
-            <span class="chip seguimiento">Licitación</span><span class="sep"></span>
-            <span class="chip ganada">Ganada</span><span class="sep"></span>
-            <span class="chip accent">Tallas y OC</span><span class="sep"></span>
-            <span class="chip ok">Entrega</span>
-          </div>
-          <ul>
-            <li><b>Costo completo por producto:</b> precio de distribuidor en dólares, descuento, gastos, bordados y margen.</li>
-            <li><b>Tallas por corporación</b> y el expediente de la licitación: bases, muestras, fianza.</li>
-            <li><b>Orden de compra por proveedor</b> con firma electrónica, inventario y entregas.</li>
-          </ul>
-        </article>
-        <article class="card">
-          <p class="case-tag"><b>Si cotizas obra</b> Constructoras e instaladores</p>
-          <h3>Cada partida con su receta de costo.</h3>
-          <div class="flow">
-            <span class="chip nueva">Catálogo del cliente</span><span class="sep"></span>
-            <span class="chip coste">Receta</span><span class="sep"></span>
-            <span class="chip seguimiento">Cotización</span><span class="sep"></span>
-            <span class="chip ganada">Contrato</span><span class="sep"></span>
-            <span class="chip ok">Estimaciones</span>
-          </div>
-          <ul>
-            <li><b>Receta por concepto:</b> insumos, mano de obra, maquinaria e indirectos. El costo sale de la receta, el precio lo pones tú.</li>
-            <li><b>Subes el catálogo del cliente,</b> aunque tenga 271 partidas, y sale listo para costear.</li>
-            <li><b>Contrato, extraordinarias y estimaciones</b> en el mismo expediente, con estado de cuenta por obra.</li>
-          </ul>
-        </article>
-      </div>
     </div>
   </section>
 
@@ -1195,21 +1526,6 @@
         <div><span class="n">Después</span><h3>Ajustes conforme cambias</h3><p>Una regla nueva, una columna, un reporte. Se hace y se despliega; no esperas a la versión de nadie.</p></div>
       </div>
 
-      <!-- Fundador. Para poner foto: reemplaza el texto "EP" por <img src="efrain.jpg" alt="Efraín Ponce"> -->
-      <div class="founder" id="quien">
-        <div class="founder-photo" aria-hidden="true">EP</div>
-        <div>
-          <p class="eyebrow">Quién lo hace</p>
-          <h2>Soy Efraín Ponce. Yo hago las entrevistas, yo construyo tu portal y yo contesto el WhatsApp.</h2>
-          <p class="body">Tratto nació en dos empresas reales: una que vende uniformes a gobierno y una constructora de obra eléctrica. Necesitaban un sistema que hiciera lo que ya hacían en Excel y WhatsApp, sin perder nada en el camino. Lo construí sentándome con sus vendedores, sus compradores y sus directores.</p>
-          <p class="body">No hay ejecutivo de ventas ni mesa de ayuda en medio. Quien te atiende en la demo es quien va a construir tu portal y quien te va a contestar cuando algo falle.</p>
-          <div class="founder-links">
-            <a class="btn btn-ghost" data-wa href="https://wa.me/5213349424216?text=Hola%20Efra%C3%ADn%2C%20quiero%20ver%20Tratto" rel="noopener">Escríbeme por WhatsApp</a>
-            <a class="btn btn-ghost" href="mailto:hola@usetratto.com?subject=Demo%20de%20Tratto">hola@usetratto.com</a>
-          </div>
-        </div>
-      </div>
-
       <div class="faq" id="preguntas">
         <div>
           <p class="eyebrow">Preguntas frecuentes</p>
@@ -1300,6 +1616,76 @@
         });
       });
     });
+    // Demo animada del hero: la conversación se escribe sola y se repite.
+    (function () {
+      var wa = document.getElementById('hero-demo');
+      var stage = document.getElementById('hero-stage');
+      var cap = document.getElementById('hero-demo-cap');
+      if (!wa || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+      var bubbles = wa.querySelectorAll('.b');
+      var typings = wa.querySelectorAll('.typing');
+      var rows = document.querySelectorAll('#hero-portal > *');
+      var replay = stage.querySelector('.replay');
+      var timers = [], running = false;
+      wa.classList.add('play');
+      function at(ms, fn) { timers.push(setTimeout(fn, ms)); }
+      function setCap(key) {
+        var txt = cap.getAttribute('data-' + key); if (!txt) return;
+        cap.classList.add('fade');
+        setTimeout(function () { cap.textContent = txt; cap.classList.remove('fade'); }, 350);
+      }
+      function reset() {
+        timers.forEach(clearTimeout); timers = [];
+        bubbles.forEach(function (b) { b.classList.remove('show'); });
+        typings.forEach(function (t) { t.classList.remove('show'); });
+        rows.forEach(function (r) { r.classList.remove('show'); });
+        stage.classList.remove('portal');
+        replay.classList.remove('show');
+      }
+      function run() {
+        reset(); running = true;
+        at(500,   function () { bubbles[0].classList.add('show'); setCap('s1'); });
+        at(1500,  function () { typings[0].classList.add('show'); });
+        at(3100,  function () { typings[0].classList.remove('show'); bubbles[1].classList.add('show'); setCap('s2'); });
+        at(6200,  function () { bubbles[2].classList.add('show'); });
+        at(7100,  function () { typings[1].classList.add('show'); });
+        at(8500,  function () { typings[1].classList.remove('show'); bubbles[3].classList.add('show'); setCap('s3'); });
+        at(11000, function () { stage.classList.add('portal'); setCap('s4'); });
+        rows.forEach(function (r, i) { at(11500 + i * 280, function () { r.classList.add('show'); }); });
+        at(14500, function () { replay.classList.add('show'); });
+        at(19500, function () { running = false; if (visible) run(); });
+      }
+      replay.addEventListener('click', run);
+      var visible = false;
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (es) {
+          visible = es[0].isIntersecting;
+          if (visible && !running) run();
+        }, { threshold: 0.4 }).observe(stage);
+      } else { visible = true; run(); }
+    })();
+
+    // Mini escenas por etapa: [data-t] aparece, [data-hide] desaparece, se repite cada data-loop ms.
+    document.querySelectorAll('.mini[data-loop]').forEach(function (m) {
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      var loop = +m.getAttribute('data-loop'), els = m.querySelectorAll('[data-t],[data-hide]');
+      var timers = [], visible = false, running = false;
+      m.classList.add('play');
+      function reset() { timers.forEach(clearTimeout); timers = []; els.forEach(function (e) { e.classList.remove('show', 'gone'); }); }
+      function run() {
+        reset(); running = true;
+        els.forEach(function (e) {
+          var t = e.getAttribute('data-t'), h = e.getAttribute('data-hide');
+          if (t !== null) timers.push(setTimeout(function () { e.classList.add('show'); }, +t));
+          if (h !== null) timers.push(setTimeout(function () { e.classList.add('gone'); }, +h));
+        });
+        timers.push(setTimeout(function () { running = false; if (visible) run(); }, loop));
+      }
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (es) { visible = es[0].isIntersecting; if (visible && !running) run(); }, { threshold: 0.5 }).observe(m);
+      } else { visible = true; run(); }
+    });
+
     var segs = document.querySelectorAll('.seg [data-mock]');
     var apps = document.querySelectorAll('.app[data-app]');
     segs.forEach(function (b) {
