@@ -204,25 +204,25 @@
   }
 
   /* ============ HERO ============ */
-  .hero { padding: 88px 0 56px; }
+  .hero { padding: 56px 0 48px; }
   .hero h1 {
     margin-top: 0;
-    font-size: clamp(34px, 5vw, 60px);
+    font-size: clamp(36px, 4.8vw, 58px);
     font-weight: 600; line-height: 1.02; letter-spacing: -0.035em;
   }
   .hero h1 em { font-style: normal; color: var(--accent); }
-  .hero h1 em { display: block; margin-top: .18em; }
-  .hero .lede { margin-top: 28px; max-width: 34rem; }
-  .hero-proof { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 14px; color: var(--ink-3); }
+  .hero h1 em { display: inline; }
+  .hero .lede { margin-top: 20px; max-width: 36rem; margin-inline: auto; font-size: 19px; }
+  .hero-proof { margin-top: 24px; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 22px; font-size: 14px; color: var(--ink-3); }
   .hero-proof span { display: inline-flex; align-items: center; gap: 8px; }
   .hero-proof span::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex: none; }
   .hero-proof b { color: var(--ink-2); font-weight: 600; }
-  .hero .cta { margin-top: 36px; display: flex; flex-wrap: wrap; gap: 12px; }
+  .hero .cta { margin-top: 26px; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
   .hero-fig { margin-top: 64px; }
   .fig-cap { margin-top: 14px; font-size: 14px; color: var(--ink-3); }
   .fig-cap b { color: var(--ink-2); font-weight: 600; }
-  .hero-grid { width: min(var(--wide), 100% - 3rem); margin-inline: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; }
-  .hero-copy .lede { max-width: 36rem; }
+  .hero-grid { width: min(var(--wide), 100% - 3rem); margin-inline: auto; display: grid; grid-template-columns: 1fr; justify-items: center; gap: 44px; text-align: center; }
+  .hero-copy { max-width: 52rem; }
   .hero-wa { max-width: 420px; justify-self: end; width: 100%; }
   .hero-wa .wa { font-size: 12.5px; padding: 18px; box-shadow: var(--shadow); border: 1px solid var(--border); }
   .hero-wa .b { max-width: 88%; }
@@ -267,7 +267,7 @@
   .hero-stage .replay { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); font: inherit; font-size: 10.5px; color: var(--ink-3); background: var(--bg-raised); border: 1px solid var(--border); border-radius: var(--r-pill); padding: 3px 10px; cursor: pointer; opacity: 0; transition: opacity .3s; pointer-events: none; }
   .hero-stage .replay.show { opacity: 1; pointer-events: auto; }
   @media (prefers-reduced-motion: reduce) { .wa.play .b { opacity: 1; transform: none; transition: none; } .wa .typing, .pm, .hero-stage .replay { display: none !important; } }
-  @media (max-width: 900px) { .hero-grid { grid-template-columns: 1fr; gap: 40px; } .hero-wa { justify-self: start; max-width: 460px; } .hero-ba { justify-self: start; max-width: 560px; } }
+  @media (max-width: 900px) { .hero-grid { gap: 36px; } .hero-wa { justify-self: start; max-width: 460px; } }
   @media (max-width: 640px) {
     .hero { padding: 40px 0 40px; }
     .hero h1 { font-size: clamp(32px, 9.5vw, 44px); margin-top: 14px; }
@@ -281,7 +281,7 @@
   }
 
   /* ============ HERO: HOY → EN TRATTO ============ */
-  .hero-ba { margin: 0; justify-self: end; width: 100%; max-width: 600px; }
+  .hero-ba { margin: 0; justify-self: center; width: 100%; max-width: 720px; }
   .ba { display: grid; grid-template-columns: .76fr 30px 1.24fr; gap: 12px; align-items: center; }
   .ba-lab { display: block; font: 600 11px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 10px; }
   .ba-before { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
@@ -309,7 +309,23 @@
   .opp-r span b { color: var(--ink); font-weight: 600; }
   .opp .chip { font-size: 9.5px; padding: 2px 8px; }
   .opp-f { margin-top: 6px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 10.5px; color: var(--ink-3); }
-  .hero-ba-cap { margin-top: 14px; font-size: 13.5px; color: var(--ink-3); max-width: 46ch; }
+  .hero-ba-cap { margin: 16px auto 0; font-size: 13.5px; color: var(--ink-3); max-width: 52ch; }
+  /* Animación: cada archivo vuela a su fila del expediente */
+  .ba.play .file { transition: transform .8s cubic-bezier(.5,0,.15,1), opacity .5s ease .25s; will-change: transform; }
+  .ba.play .file.fly { transform: translate(var(--dx), var(--dy)) scale(.5); opacity: 0; }
+  .ba.play .opp-h, .ba.play .opp-r, .ba.play .opp-f { opacity: 0; transform: translateX(10px); transition: opacity .4s ease, transform .5s cubic-bezier(.2,.7,.2,1), background .6s ease; }
+  .ba.play .opp-h.show, .ba.play .opp-r.show, .ba.play .opp-f.show { opacity: 1; transform: none; }
+  .ba.play .opp-r { margin: 0 -6px; padding-inline: 6px; border-radius: 6px; }
+  .ba.play .opp-r.hit { background: var(--accent-soft); }
+  .ba.play .opp-r .chip { transform: scale(.6); opacity: 0; transition: transform .4s cubic-bezier(.34,1.56,.64,1) .25s, opacity .3s ease .25s; }
+  .ba.play .opp-r.show .chip { transform: none; opacity: 1; }
+  .ba.play .opp { transition: box-shadow .7s ease; }
+  .ba.play.done .opp { box-shadow: 0 0 0 3px var(--accent-soft), var(--shadow); }
+  .ba.play .ba-arrow::before { content: ""; position: absolute; top: -2px; left: 0; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); opacity: 0; }
+  .ba.play.flying .ba-arrow::before { animation: dash .9s linear infinite; }
+  @keyframes dash { 0% { left: 0; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { left: calc(100% - 5px); opacity: 0; } }
+  @media (max-width: 560px) { .ba.play .ba-arrow::before { left: -2px; top: 0; } @keyframes dash { 0% { top: 0; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { top: calc(100% - 5px); opacity: 0; } } }
+  .ba.snap * { transition: none !important; }
   @media (max-width: 560px) {
     .ba { grid-template-columns: 1fr; gap: 10px; }
     .ba-arrow { width: 1px; height: 22px; justify-self: center; margin-top: 0; }
@@ -320,35 +336,67 @@
     .opp-r { padding: 6px 0; }
   }
 
-  /* ============ QUÉ REEMPLAZA ============ */
-  .swap-head { display: grid; grid-template-columns: 1fr 56px 1fr; gap: 24px; margin-top: 44px; padding-bottom: 10px; border-bottom: 1px solid var(--border); font: 600 12px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
-  .swap-head span:last-child { color: var(--accent); }
-  .swap { list-style: none; margin: 0; padding: 0; counter-reset: swap; }
-  .swap li { display: grid; grid-template-columns: 1fr 56px 1fr; gap: 24px; padding: 26px 0; border-bottom: 1px solid var(--border); align-items: center; counter-increment: swap; }
-  .swap-today { padding-right: 8px; position: relative; }
-  .swap-today::before { content: "0" counter(swap); position: absolute; right: 100%; margin-right: 18px; top: 2px; font: 600 11px var(--font-mono); color: var(--ink-4); }
-  .tool { display: inline-flex; align-items: center; gap: 7px; font: 600 11.5px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
-  .tool::before { content: ""; width: 10px; height: 12px; border-radius: 2px; background: var(--tc); flex: none; }
-  .tool.xls { --tc: #3f8f5a; } .tool.doc { --tc: #4f7fb8; } .tool.pdf { --tc: #c2574a; } .tool.mail { --tc: #9a958a; } .tool.chat { --tc: #3bb26b; }
-  .swap h3 { font-family: var(--font-ui); font-size: 17px; font-weight: 600; letter-spacing: 0; margin-top: 8px; }
-  .swap p { margin-top: 5px; font-size: 15px; color: var(--ink-2); max-width: 52ch; }
-  .swap-today h3 { color: var(--ink-2); text-decoration: line-through; text-decoration-color: var(--ink-4); text-decoration-thickness: 1.5px; }
-  .swap-arrow { height: 1px; background: var(--ink-4); position: relative; }
+  /* ============ QUÉ REEMPLAZA: escenario con pestañas ============ */
+  .swap { margin-top: 44px; }
+  .swap-tabs { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  .swap-tabs button { appearance: none; position: relative; text-align: left; background: none; border: 0; border-top: 2px solid var(--border); padding: 14px 4px 12px; cursor: pointer; font: inherit; color: var(--ink-3); border-radius: 0; transition: color .2s; }
+  .swap-tabs button b { display: block; margin-top: 6px; font-size: 15px; font-weight: 600; color: inherit; }
+  .swap-tabs button .tool { font-size: 10.5px; color: inherit; }
+  .swap-tabs button .tool::before { opacity: .55; }
+  .swap-tabs button:hover { color: var(--ink-2); }
+  .swap-tabs button.on { color: var(--ink); }
+  .swap-tabs button.on .tool::before { opacity: 1; }
+  .swap-tabs .bar { position: absolute; left: 0; top: -2px; height: 2px; width: 0; background: var(--accent); }
+  .swap-tabs button.on .bar { width: 100%; transition: width var(--swap-ms, 5000ms) linear; }
+  .swap.paused .swap-tabs button.on .bar { transition: none; width: 100%; }
+  .swap-stage { position: relative; display: grid; margin-top: 28px; min-height: 340px; }
+  .swap-pane { grid-area: 1 / 1; display: grid; grid-template-columns: 1fr 56px 1fr; gap: 32px; align-items: center; padding: 36px 40px; border-radius: 24px; background: var(--bg-sunken); border: 1px solid var(--border); opacity: 0; visibility: hidden; transition: opacity .35s ease, visibility 0s .35s; }
+  .swap-pane.on { opacity: 1; visibility: visible; transition: opacity .35s ease; }
+  .swap-pane .lab { display: block; font: 600 11px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+  .swap-tratto .lab { color: var(--accent); }
+  .swap-pane .files { display: flex; flex-direction: column; gap: 7px; margin-top: 14px; min-height: 76px; }
+  .swap-pane .file { font-size: 12.5px; align-self: flex-start; max-width: 100%; }
+  .swap-pane .files .file:nth-child(2) { transform: rotate(-1deg) translateX(10px); }
+  .swap-pane h3 { font-family: var(--font-display); font-size: clamp(22px, 2.4vw, 30px); font-weight: 600; letter-spacing: -0.02em; line-height: 1.12; margin-top: 16px; }
+  .swap-pane p { margin-top: 8px; font-size: 16px; color: var(--ink-2); max-width: 40ch; }
+  .swap-today h3 { color: var(--ink-2); position: relative; display: inline-block; }
+  .swap-today h3::after { content: ""; position: absolute; left: -2px; right: -2px; top: 56%; height: 1.5px; background: var(--ink-4); transform: scaleX(0); transform-origin: left center; }
+  .swap-tratto .opp { margin-top: 14px; padding: 4px 14px; font-size: 12.5px; }
+  .swap-tratto .opp .opp-r { grid-template-columns: 92px 1fr auto; padding: 9px 0; border: 0; }
+  .swap-tratto > .chip { margin-top: 16px; font-size: 11.5px; padding: 4px 10px; }
+  .swap-arrow { height: 1px; background: var(--ink-4); position: relative; transform-origin: left center; }
   .swap-arrow::after { content: ""; position: absolute; right: -1px; top: 50%; transform: translateY(-50%); border-top: 4px solid transparent; border-bottom: 4px solid transparent; border-left: 7px solid var(--ink-4); }
-  .swap-tratto { background: var(--bg-raised); border: 1px solid var(--border); border-radius: var(--r-xl); padding: 18px 22px 20px; }
-  .swap-tratto .chip { font-size: 11px; padding: 4px 10px; }
-  .swap-foot { margin-top: 28px; font-size: 17px; color: var(--ink-2); max-width: 60ch; }
+  .swap-arrow::before { content: ""; position: absolute; top: -2px; left: 0; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); opacity: 0; }
+  /* Entrada de cada paso */
+  .swap-pane .file, .swap-pane .swap-today h3, .swap-pane .swap-today p, .swap-pane .opp, .swap-tratto > .chip, .swap-tratto h3, .swap-tratto p { opacity: 0; transform: translateY(8px); transition: opacity .4s ease, transform .5s cubic-bezier(.2,.7,.2,1); }
+  .swap-pane.on .file, .swap-pane.on .swap-today h3, .swap-pane.on .swap-today p, .swap-pane.on .opp, .swap-pane.on .swap-tratto > .chip, .swap-pane.on .swap-tratto h3, .swap-pane.on .swap-tratto p { opacity: 1; transform: none; }
+  .swap-pane.on .files .file:nth-child(2) { transform: rotate(-1deg) translateX(10px); }
+  .swap-pane.on .file:nth-child(1) { transition-delay: .05s; } .swap-pane.on .file:nth-child(2) { transition-delay: .15s; }
+  .swap-pane.on .swap-today h3 { transition-delay: .2s; } .swap-pane.on .swap-today p { transition-delay: .28s; }
+  .swap-pane.on .swap-today h3::after { transform: scaleX(1); transition: transform .4s ease .75s; }
+  .swap-pane .swap-arrow { transform: scaleX(0); transition: transform .45s ease; }
+  .swap-pane.on .swap-arrow { transform: none; transition-delay: .55s; }
+  .swap-pane.on .swap-arrow::before { animation: dash 1s linear 1s 2; }
+  .swap-pane.on .opp { transition-delay: 1s; }
+  .swap-pane.on .opp .chip { transform: scale(.6); opacity: 0; transition: transform .45s cubic-bezier(.34,1.56,.64,1) 1.35s, opacity .3s ease 1.35s; }
+  .swap-pane.on .opp .chip { transform: none; opacity: 1; }
+  .swap-pane.on .swap-tratto > .chip { transition-delay: 1.15s; } .swap-pane.on .swap-tratto h3 { transition-delay: 1.25s; } .swap-pane.on .swap-tratto p { transition-delay: 1.35s; }
+  @media (prefers-reduced-motion: reduce) { .swap-pane *, .swap-pane { transition: none !important; animation: none !important; } }
+  .swap-foot { margin-top: 24px; font-size: 17px; color: var(--ink-2); max-width: 60ch; }
   .swap-foot b { color: var(--ink); font-weight: 600; }
-  @media (max-width: 1160px) { .swap-today::before { position: static; display: block; margin: 0 0 8px; } }
-  @media (max-width: 760px) {
-    .swap-head { display: none; }
-    .swap { margin-top: 36px; border-top: 1px solid var(--border); }
-    .swap li { grid-template-columns: 1fr; gap: 12px; padding: 22px 0; }
-    .swap-arrow { width: 1px; height: 22px; justify-self: center; }
+  @media (max-width: 900px) {
+    .swap-tabs { display: flex; overflow-x: auto; scrollbar-width: none; gap: 4px; margin-inline: -1.25rem; padding-inline: 1.25rem; }
+    .swap-tabs::-webkit-scrollbar { display: none; }
+    .swap-tabs button { flex: 0 0 auto; min-width: 128px; padding-right: 12px; }
+    .swap-pane { grid-template-columns: 1fr; gap: 18px; padding: 24px 20px; }
+    .swap-arrow { width: 1px; height: 22px; justify-self: center; transform-origin: center top; }
     .swap-arrow::after { right: auto; left: 50%; top: auto; bottom: -1px; transform: translateX(-50%); border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 7px solid var(--ink-4); border-bottom: 0; }
-    .swap-tratto { padding: 16px 18px 18px; }
-    .swap h3 { font-size: 16px; }
-    .swap p { font-size: 14.5px; }
+    .swap-arrow::before { display: none; }
+    .swap-pane .swap-arrow { transform: scaleY(0); }
+    .swap-pane .files { min-height: 0; }
+    .swap-tratto .opp .opp-r { grid-template-columns: 1fr auto; }
+    .swap-tratto .opp .opp-r em { grid-column: 1 / -1; }
+    .swap-pane h3 { font-size: 22px; }
   }
 
   /* Mock del portal dentro de Casos de uso */
@@ -551,16 +599,38 @@
   /* Etapas como features */
   .stages-note { margin: 36px 0 0; padding: 12px 16px; border-left: 3px solid var(--accent); background: var(--bg-sunken); border-radius: 0 var(--r-lg) var(--r-lg) 0; font-size: 14.5px; color: var(--ink-2); max-width: 78ch; }
   .stages-note b { color: var(--ink); font-weight: 600; }
-  .stages { list-style: none; margin: 20px 0 0; padding: 0; border-top: 1px solid var(--border); }
-  .stages li { display: grid; grid-template-columns: 200px 1fr 300px; gap: 20px 32px; padding: 20px 0; border-bottom: 1px solid var(--border); align-items: start; }
-  .stages .chip { font-size: 12px; padding: 5px 12px; margin-top: 2px; justify-self: start; }
-  .stages h3 { font-family: var(--font-ui); font-size: 17px; font-weight: 600; letter-spacing: 0; }
-  .stages p { margin-top: 5px; font-size: 15px; color: var(--ink-2); max-width: 62ch; }
-  @media (max-width: 1000px) { .stages li { grid-template-columns: 200px 1fr; } .stages .mini { grid-column: 1 / -1; max-width: 440px; } }
-  @media (max-width: 640px) { .stages li { grid-template-columns: 1fr; gap: 10px; } .stages .mini { max-width: none; margin-top: 4px; } }
+  .stages-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; margin-top: 32px; }
+  .stage-stage { position: sticky; top: max(84px, calc(50vh - 230px)); }
+  .stages { list-style: none; margin: 0; padding: 0; }
+  .stages > li { min-height: 52vh; display: flex; align-items: center; opacity: .32; transition: opacity .35s ease; }
+  .stages > li:first-child { min-height: 40vh; align-items: flex-start; padding-top: 4vh; }
+  .stages > li:last-child { min-height: 40vh; align-items: flex-end; padding-bottom: 4vh; }
+  .stages > li.on { opacity: 1; }
+  .stage-panel { position: relative; min-height: 440px; display: grid; place-items: center; padding: 40px 32px; border-radius: 24px; background: var(--bg-sunken); overflow: hidden; }
+  .stage-panel .mini { grid-area: 1 / 1; opacity: 0; transform: translateY(14px) scale(.98); transition: opacity .4s ease, transform .5s cubic-bezier(.2,.7,.2,1); pointer-events: none; }
+  .stage-panel .mini.on { opacity: 1; transform: none; }
+  .stage-panel::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(var(--border) 1.2px, transparent 1.3px); background-size: 16px 16px; -webkit-mask-image: radial-gradient(ellipse 60% 60% at 50% 50%, #000 20%, transparent 70%); mask-image: radial-gradient(ellipse 60% 60% at 50% 50%, #000 20%, transparent 70%); opacity: .8; }
+  .stage-text { padding: 8px 0; }
+  .stage-text .chip { font-size: 12px; padding: 5px 12px; }
+  .stage-text h3 { font-family: var(--font-display); font-size: clamp(26px, 2.8vw, 36px); font-weight: 600; line-height: 1.12; margin-top: 16px; }
+  .stage-text p { margin-top: 14px; font-size: 17px; color: var(--ink-2); max-width: 46ch; }
+  .checks { list-style: none; margin: 22px 0 0; padding: 0; display: grid; gap: 10px; }
+  .checks li { position: relative; padding-left: 30px; font-size: 15.5px; color: var(--ink-2); }
+  .checks li::before { content: ""; position: absolute; left: 0; top: .1em; width: 18px; height: 18px; border-radius: 50%; background: var(--accent-soft); }
+  .checks li::after { content: ""; position: absolute; left: 6.5px; top: calc(.1em + 4px); width: 4px; height: 8px; border: solid var(--accent); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+  @media (max-width: 900px) {
+    .stages-wrap { grid-template-columns: 1fr; gap: 0; }
+    .stage-stage { top: 56px; z-index: 2; padding: 10px 0 14px; background: var(--bg); }
+    .stage-panel { min-height: 0; padding: 22px 16px; border-radius: 18px; }
+    .stage-panel .mini { width: min(360px, 100%); font-size: 12px; }
+    .stages > li { min-height: 0; padding: 28px 0; opacity: .4; }
+    .stages > li:first-child, .stages > li:last-child { min-height: 0; padding: 28px 0; }
+    .stage-text h3 { font-size: 24px; }
+    .stage-text p { font-size: 16px; }
+  }
 
   /* ============ MINI ESCENAS POR ETAPA ============ */
-  .stages .mini { position: relative; display: flex; flex-direction: column; gap: 6px; min-height: 172px; padding: 12px 14px; background: var(--bg-raised); border: 1px solid var(--border); border-radius: var(--r-xl); box-shadow: 0 1px 2px rgba(43,41,37,.05); font-size: 11.5px; color: var(--ink); line-height: 1.4; }
+  .stage-panel .mini { position: relative; display: flex; flex-direction: column; gap: 6px; width: min(400px, 100%); padding: 14px 16px; background: var(--bg-raised); border: 1px solid var(--border); border-radius: var(--r-xl); box-shadow: var(--shadow); font-size: 12.5px; color: var(--ink); line-height: 1.4; }
   .mini .mh { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border-subtle); font-size: 10.5px; color: var(--ink-3); }
   .mini .mh b { color: var(--ink); font-weight: 600; font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .mini .mr { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--border-subtle); }
@@ -568,7 +638,7 @@
   .mini .g { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .mini .n { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 10.5px; color: var(--ink-2); white-space: nowrap; }
   .mini .mute { color: var(--ink-3); font-size: 10.5px; white-space: nowrap; }
-  .stages .mini .chip { font-size: 9.5px; padding: 2px 8px; margin: 0; }
+  .stage-panel .mini .chip { font-size: 10px; padding: 2px 8px; margin: 0; }
   .mini .btn-m { display: inline-flex; align-items: center; font: 600 10.5px var(--font-ui); padding: 4px 10px; border-radius: var(--r-pill); background: var(--accent); color: var(--accent-ink); white-space: nowrap; }
   .mini .bar { position: relative; height: 6px; border-radius: 3px; background: var(--bg-sunken); overflow: hidden; }
   .mini .bar i { position: absolute; top: 0; bottom: 0; left: 0; width: var(--w, 100%); background: var(--accent); border-radius: 3px; transition: width 1.4s cubic-bezier(.2,.7,.2,1); }
@@ -638,12 +708,12 @@
   @media (max-width: 860px) { .quote { grid-template-columns: 1fr; gap: 18px; padding: 26px 22px; } .quote figcaption { white-space: normal; } }
 
   /* Seguridad y permisos */
-  .trust { display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; align-items: start; margin-top: 44px; }
+  .trust { display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; align-items: start; margin-top: 32px; }
   .trust-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--border); }
-  .trust-list li { padding: 18px 0; border-bottom: 1px solid var(--border); display: grid; grid-template-columns: 28px 1fr; gap: 14px; align-items: start; }
+  .trust-list li { padding: 13px 0; border-bottom: 1px solid var(--border); display: grid; grid-template-columns: 28px 1fr; gap: 14px; align-items: start; }
   .trust-list i { width: 28px; height: 28px; border-radius: 8px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-style: normal; font-family: var(--font-mono); font-size: 11px; font-weight: 600; margin-top: 1px; }
   .trust-list h3 { font-family: var(--font-ui); font-size: 16px; font-weight: 600; letter-spacing: 0; }
-  .trust-list p { margin-top: 4px; font-size: 15px; color: var(--ink-2); }
+  .trust-list p { margin-top: 3px; font-size: 14.5px; color: var(--ink-2); }
   .perm { background: var(--bg-raised); border: 1px solid var(--border); border-radius: var(--r-xl); padding: 16px 18px; font-family: var(--font-ui); font-size: 11.5px; color: var(--ink-2); }
   .perm h5 { margin: 0 0 12px; font: 700 9px var(--font-ui); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
   .matrix { width: 100%; border-collapse: collapse; }
@@ -732,7 +802,6 @@
     <a class="brand" href="#top" aria-label="Tratto, inicio"><span class="brand-mark">T</span><span class="brand-word">Tratto</span></a>
     <nav class="nav-links" aria-label="Secciones">
       <a class="quiet" href="#flujo">Cómo funciona</a>
-      <a class="quiet" href="#casos">Casos de uso</a>
       <a class="quiet" href="#precio">Precio</a>
       <a class="btn btn-primary" data-wa href="https://wa.me/5213349424216?text=Hola%2C%20quiero%20ver%20Tratto" rel="noopener"><span class="long">Escríbenos por WhatsApp</span><span class="short">WhatsApp</span></a>
     </nav>
@@ -745,8 +814,8 @@
   <section class="hero">
     <div class="hero-grid">
       <div class="hero-copy">
-        <h1>Tu venta vive repartida en Excel, WhatsApp y correo. <em>Tratto la junta en un solo lugar.</em></h1>
-        <p class="lede">Costeas en Excel, pasas las cifras a Word, mandas el PDF por correo, das seguimiento por WhatsApp y la entrega la llevas en otro grupo. Cuando alguien pregunta "¿en qué quedó eso?", hay que buscar en cinco lugares. Tratto es un portal hecho para tu empresa donde cada venta avanza por etapas, de la cotización a la entrega y el cobro.</p>
+        <h1>Tu venta vive en cinco lugares. <em>Tratto la junta en uno.</em></h1>
+        <p class="lede">Costeas en Excel, cotizas en Word, avisas por WhatsApp y cobras con otro Excel. Tratto lleva cada venta en un solo expediente, de la cotización a la entrega y el cobro.</p>
         <div class="cta">
           <a class="btn btn-primary btn-lg" data-wa href="https://wa.me/5213349424216?text=Hola%2C%20quiero%20ver%20Tratto" rel="noopener">Escríbenos por WhatsApp</a>
           <a class="btn btn-ghost btn-lg" href="#reemplaza">Ver qué reemplaza</a>
@@ -784,7 +853,7 @@
             </div>
           </div>
         </div>
-        <figcaption class="hero-ba-cap">Lo que hoy está en siete archivos y un chat, en un expediente por venta: de la cotización a la entrega y el cobro. Cualquiera del equipo lo abre y sabe en qué va.</figcaption>
+        <figcaption class="hero-ba-cap">Siete archivos y un chat, en un expediente por venta. Cualquiera del equipo lo abre y sabe en qué va.</figcaption>
       </figure>
     </div>
 
@@ -815,90 +884,131 @@
           <p class="eyebrow">El problema</p>
           <h2>De cotizar a entregar,<br>todo en herramientas sueltas.</h2>
         </div>
-        <p class="lede">No es que Excel esté mal. Es que cada paso, desde el costeo hasta la entrega y el cobro, vive en un lugar distinto, y nadie ve la venta completa. Esto es lo que Tratto reemplaza, paso por paso.</p>
+        <p class="lede">Cada paso vive en un lugar distinto y nadie ve la venta completa. Esto es lo que Tratto reemplaza.</p>
       </div>
-      <div class="swap-head" aria-hidden="true"><span>Hoy</span><span></span><span>En Tratto</span></div>
-      <ol class="swap">
-        <li>
+      <div class="swap" id="swap">
+        <div class="swap-tabs" role="tablist" aria-label="Pasos de la venta">
+        <button type="button" role="tab" class="on" aria-selected="true" data-i="0"><span class="tool xls">Excel</span><b>Costear</b><i class="bar"></i></button>
+        <button type="button" role="tab" aria-selected="false" data-i="1"><span class="tool doc">Word y PDF</span><b>Cotizar</b><i class="bar"></i></button>
+        <button type="button" role="tab" aria-selected="false" data-i="2"><span class="tool mail">Correo</span><b>Enviar y archivar</b><i class="bar"></i></button>
+        <button type="button" role="tab" aria-selected="false" data-i="3"><span class="tool chat">WhatsApp interno</span><b>Dar seguimiento</b><i class="bar"></i></button>
+        <button type="button" role="tab" aria-selected="false" data-i="4"><span class="tool pdf">PDF, Excel y WhatsApp</span><b>Entregar</b><i class="bar"></i></button>
+        <button type="button" role="tab" aria-selected="false" data-i="5"><span class="tool xls">Excel</span><b>Cobrar</b><i class="bar"></i></button>
+        </div>
+        <div class="swap-stage">
+        <div class="swap-pane on" data-i="0">
           <div class="swap-today">
-            <span class="tool xls">Excel</span>
+            <span class="lab">Hoy</span>
+            <div class="files">
+              <div class="file xls">costeo-policia-v3-FINAL.xlsx</div>
+            </div>
             <h3>Costear</h3>
-            <p>Un archivo por cotización, con fórmulas que solo entiende quien lo hizo. Versiones "v3-FINAL-ahora-sí", y la utilidad a la vista de quien tenga el archivo.</p>
+            <p>Un Excel por cotización, con fórmulas que solo entiende quien lo hizo.</p>
           </div>
           <div class="swap-arrow" aria-hidden="true"></div>
           <div class="swap-tratto">
+            <span class="lab">En Tratto</span>
+            <div class="opp"><div class="opp-r"><em>Costeo</em><span>38 líneas · utilidad <b>18.4%</b></span><span class="chip ok">validado</span></div></div>
             <span class="chip coste">En costeo</span>
             <h3>El costeo vive dentro de la oportunidad</h3>
-            <p>Con tus fórmulas, línea por línea. La utilidad se calcula sola, dirección la valida, y la ve solo quien tú decidas.</p>
+            <p>Tus fórmulas, la utilidad se calcula sola y la ve solo quien tú decidas.</p>
           </div>
-        </li>
-        <li>
+        </div>
+        <div class="swap-pane" data-i="1">
           <div class="swap-today">
-            <span class="tool doc">Word y PDF</span>
+            <span class="lab">Hoy</span>
+            <div class="files">
+              <div class="file doc">Cotización Policía Estatal.docx</div>
+              <div class="file pdf">COT-387 (2).pdf</div>
+            </div>
             <h3>Cotizar</h3>
-            <p>Copias las cifras del Excel a Word, exportas el PDF, lo renombras "(2)" y lo guardas en una carpeta que nadie encuentra. Si cambia una cantidad, todo de nuevo.</p>
+            <p>Copias las cifras a Word, exportas el PDF y lo guardas donde nadie lo encuentra.</p>
           </div>
           <div class="swap-arrow" aria-hidden="true"></div>
           <div class="swap-tratto">
+            <span class="lab">En Tratto</span>
+            <div class="opp"><div class="opp-r"><em>Cotización</em><span><b>V2</b> vigente, con membrete</span><span class="chip ok">enviada</span></div></div>
             <span class="chip seguimiento">Cotizada</span>
             <h3>PDF con tu membrete, en un clic</h3>
-            <p>Sale del costeo, sin copiar nada. Monto en letras y versiones V1, V2, V3: la vigente es la que tiene el cliente, las anteriores se guardan.</p>
+            <p>Sale del costeo sin copiar nada, con versiones V1, V2, V3 y monto en letras.</p>
           </div>
-        </li>
-        <li>
+        </div>
+        <div class="swap-pane" data-i="2">
           <div class="swap-today">
-            <span class="tool mail">Correo</span>
+            <span class="lab">Hoy</span>
+            <div class="files">
+              <div class="file mail">RE: RE: RE: cotización uniformes</div>
+            </div>
             <h3>Enviar y archivar</h3>
-            <p>Cadenas de RE: RE: RE: con adjuntos. Las bases, el anexo y la cotización buena están en el correo de alguien que ya no trabaja aquí.</p>
+            <p>Cadenas de RE: RE: RE: con adjuntos que se pierden.</p>
           </div>
           <div class="swap-arrow" aria-hidden="true"></div>
           <div class="swap-tratto">
+            <span class="lab">En Tratto</span>
+            <div class="opp"><div class="opp-r"><em>Documentos</em><span>bases, anexo, V1 y V2</span><span class="chip nueva">5 archivos</span></div></div>
             <span class="chip accent">Documentación</span>
             <h3>Cada documento en la carpeta de su venta</h3>
-            <p>Bases, anexos, cotizaciones, órdenes de compra. Lo sube uno y lo encuentra cualquiera del equipo que tenga permiso.</p>
+            <p>Bases, anexos, cotizaciones y órdenes de compra, cada uno en su lugar.</p>
           </div>
-        </li>
-        <li>
+        </div>
+        <div class="swap-pane" data-i="3">
           <div class="swap-today">
-            <span class="tool chat">WhatsApp interno</span>
+            <span class="lab">Hoy</span>
+            <div class="files">
+              <div class="file chat">"¿ya se mandó la cotización?"</div>
+            </div>
             <h3>Dar seguimiento</h3>
-            <p>"¿Ya se mandó?" "¿Quién tiene las tallas?" Se pierde entre los mensajes de la familia, y al mes nadie sabe en qué quedó.</p>
+            <p>"¿Ya se mandó?" se pierde entre los mensajes de la familia.</p>
           </div>
           <div class="swap-arrow" aria-hidden="true"></div>
           <div class="swap-tratto">
+            <span class="lab">En Tratto</span>
+            <div class="opp"><div class="opp-r"><em>Seguimiento</em><span>Muestras · Ángel · 17 sep</span><span class="chip prog">en curso</span></div></div>
             <span class="chip seguimiento">En negociación</span>
             <h3>Las notas quedan en el expediente</h3>
-            <p>Tu equipo sigue usando WhatsApp, pero cada nota se guarda con fecha y responsable. Y los avisos llegan solos: te asignaron algo, venció un cobro.</p>
+            <p>Con fecha y responsable. Y los avisos llegan solos al WhatsApp.</p>
           </div>
-        </li>
-        <li>
+        </div>
+        <div class="swap-pane" data-i="4">
           <div class="swap-today">
-            <span class="tool pdf">PDF, Excel y WhatsApp</span>
+            <span class="lab">Hoy</span>
+            <div class="files">
+              <div class="file pdf">OC-firmada-escaneada.pdf</div>
+              <div class="file xls">tallas-v2.xlsx</div>
+            </div>
             <h3>Entregar</h3>
-            <p>Ganaste, y ahora la orden de compra al proveedor va en un PDF firmado a mano y escaneado, las tallas en otro Excel y las entregas se avisan en un grupo. Lo cotizado y lo entregado ya no cuadran.</p>
+            <p>OC firmada a mano, tallas en otro Excel y entregas avisadas en un grupo.</p>
           </div>
           <div class="swap-arrow" aria-hidden="true"></div>
           <div class="swap-tratto">
+            <span class="lab">En Tratto</span>
+            <div class="opp"><div class="opp-r"><em>Entrega</em><span>2 OC firmadas · tallas cuadran</span><span class="chip prog">1 de 2</span></div></div>
             <span class="chip ganada">Ganada</span>
-            <h3>La venta se vuelve proyecto, en el mismo expediente</h3>
-            <p>Órdenes de compra a proveedor con firma electrónica, tallas, inventario y entregas. O contrato, extraordinarias y estimaciones si cotizas obra. Todo cuadra contra lo que se cotizó.</p>
+            <h3>La venta se vuelve proyecto</h3>
+            <p>Órdenes de compra con firma electrónica, tallas y entregas. Todo cuadra con lo cotizado.</p>
           </div>
-        </li>
-        <li>
+        </div>
+        <div class="swap-pane" data-i="5">
           <div class="swap-today">
-            <span class="tool xls">Excel</span>
+            <span class="lab">Hoy</span>
+            <div class="files">
+              <div class="file xls">cobranza-2026.xlsx</div>
+            </div>
             <h3>Cobrar</h3>
-            <p>Otro archivo con lo que se cobró y lo que falta, actualizado cuando alguien se acuerda. Los vencidos se descubren tarde.</p>
+            <p>Otro Excel que se actualiza cuando alguien se acuerda.</p>
           </div>
           <div class="swap-arrow" aria-hidden="true"></div>
           <div class="swap-tratto">
+            <span class="lab">En Tratto</span>
+            <div class="opp"><div class="opp-r"><em>Cobranza</em><span>Anticipo 30% cobrado</span><span class="chip validacion">vence 30 nov</span></div></div>
             <span class="chip ok">Cobrado</span>
             <h3>Estado de cuenta por proyecto</h3>
-            <p>Cobrado, pendiente y vencido, con abonos parciales. Aviso por WhatsApp cuando algo vence. Se exporta a PDF o Excel.</p>
+            <p>Cobrado, pendiente y vencido, con aviso cuando algo vence.</p>
           </div>
-        </li>
-      </ol>
-      <p class="swap-foot">Y todo eso es <b>un solo expediente por venta</b> que avanza por etapas, desde la oportunidad hasta la entrega y el cobro. Por eso no es solo un CRM: también lleva el proyecto. Abajo, cómo se ve cada etapa.</p>
+        </div>
+        </div>
+      </div>
+      <p class="swap-foot"><b>Un solo expediente por venta</b>, de la oportunidad a la entrega y el cobro. No es solo un CRM: también lleva el proyecto.</p>
     </div>
   </section>
 
@@ -910,11 +1020,13 @@
           <p class="eyebrow">Cómo funciona</p>
           <h2>Cada paso de tu venta<br>tiene su lugar.</h2>
         </div>
-        <p class="lede">Lo que hoy está repartido en cinco herramientas, en Tratto avanza por etapas. En cada etapa tienes lo que necesitas para cerrarla, y ves de un vistazo en cuál va cada venta.</p>
+        <p class="lede">Cada venta avanza por etapas. En cada una tienes lo que necesitas para cerrarla.</p>
       </div>
-      <p class="stages-note"><b>Cada negocio tiene sus propias etapas.</b> Las de abajo son las de una empresa que vende uniformes a gobierno. Una constructora lleva catálogo del cliente, receta, contrato y estimaciones. Las tuyas se definen contigo en las entrevistas.</p>
-      <ol class="stages">
-        <li><span class="chip nueva">Nueva oportunidad</span><div><h3>Entra con todo lo que hace falta</h3><p>Se crea desde el portal o con un WhatsApp: "nueva oportunidad para Policía Estatal, 340 elementos, cierre 30 sep". Queda con folio, cliente, vendedor y fecha. Si el cliente mandó su lista en Excel o PDF, la subes y queda lista para costear.</p></div><div class="mini" data-loop="8000" aria-hidden="true">
+      <p class="stages-note"><b>Cada negocio tiene sus propias etapas.</b> Estas son las de una empresa que vende uniformes a gobierno. Las tuyas se definen contigo.</p>
+      <div class="stages-wrap">
+        <div class="stage-stage" aria-hidden="true">
+          <div class="stage-panel">
+          <div class="mini on" data-scene="0" data-loop="8000" aria-hidden="true">
           <div class="mh"><b>OPP-0387 · Uniformes, Policía Estatal</b><span class="chip nueva">Nueva</span></div>
           <div class="mr" data-t="400"><span class="g">lista-policia-estatal.xlsx</span><span class="mute">del cliente · 38 líneas</span></div>
           <div class="bar" data-t="900"><i style="--w:100%" data-t="1000"></i></div>
@@ -922,24 +1034,24 @@
           <div class="mr" data-t="2900"><span class="g">Chaleco portaplacas</span><span class="n">120 pzas</span></div>
           <div class="mr" data-t="3200"><span class="g">Bota táctica, piel</span><span class="n">340 pzas</span></div>
           <div class="mf" data-t="3900"><span><b>38 líneas</b> importadas, listas para costear</span><span class="chip ok">1 minuto</span></div>
-        </div></li>
-        <li><span class="chip coste">En costeo</span><div><h3>Cada línea con su costo real</h3><p>Compras confirma insumos, mano de obra y precios de proveedor. La utilidad se calcula sola, y la ve solo quien tú decidas.</p></div><div class="mini" data-loop="8500" aria-hidden="true">
+        </div>
+          <div class="mini" data-scene="1" data-loop="8500" aria-hidden="true">
           <div class="mh"><b>Costeo · 38 líneas</b><span class="chip coste">En costeo</span></div>
           <div class="mr"><span class="g">Chamarra táctica softshell</span><span class="n">$1,240.00</span><span class="chip coste sw" data-hide="1400">cotizando</span><span class="chip ok sw" data-t="1400">confirmado</span></div>
           <div class="mr"><span class="g">Chaleco portaplacas</span><span class="n">$2,890.00</span><span class="chip coste sw" data-hide="2400">cotizando</span><span class="chip ok sw" data-t="2400">confirmado</span></div>
           <div class="mr"><span class="g">Bota táctica, piel</span><span class="n">$1,560.00</span><span class="chip coste sw" data-hide="3400">cotizando</span><span class="chip ok sw" data-t="3400">confirmado</span></div>
           <div class="sys" data-t="4000">Emily Torres confirmó 3 precios de proveedor</div>
           <div class="mf" data-t="4700"><span>Utilidad <b>18.4%</b>, calculada sola</span><span class="mute">la ve solo dirección</span></div>
-        </div></li>
-        <li><span class="chip validacion">Validación</span><div><h3>Nada se cotiza sin que dirección lo valide</h3><p>El portal avisa qué falta: líneas con poco margen, precios sin confirmar. Dirección revisa y aprueba, y queda un PDF con las cifras de ese momento.</p></div><div class="mini" data-loop="9000" aria-hidden="true">
+        </div>
+          <div class="mini" data-scene="2" data-loop="9000" aria-hidden="true">
           <div class="mh"><b>Validación de costeo</b><span class="chip validacion sw" data-hide="4800">En validación</span><span class="chip ok sw" data-t="4800">Costeo confirmado</span></div>
           <div class="mr"><span class="g">2 líneas bajo el margen mínimo</span><span class="chip validacion sw" data-hide="1800">revisar</span><span class="chip ok sw" data-t="1800">resuelto</span></div>
           <div class="mr"><span class="g">Precios de proveedor</span><span class="chip validacion sw" data-hide="2600">1 sin confirmar</span><span class="chip ok sw" data-t="2600">confirmados</span></div>
           <div class="mr"><span class="g">Margen a gobierno</span><span class="n">6.0%</span><span class="chip ok">ok</span></div>
           <div class="mr" data-t="3400"><span class="g mute">Elena Vargas · Dirección</span><span class="btn-m">Validar costeo</span></div>
           <div class="mf" data-t="4800"><span>PDF de validación · 09:31</span><span class="mute">cifras congeladas</span></div>
-        </div></li>
-        <li><span class="chip seguimiento">Cotizada</span><div><h3>PDF con tu membrete, en un clic</h3><p>Con monto en letras y versiones V1, V2, V3. La vigente es la que tiene el cliente; las anteriores se guardan, no se pierden.</p></div><div class="mini" data-loop="9000" aria-hidden="true">
+        </div>
+          <div class="mini" data-scene="3" data-loop="9000" aria-hidden="true">
           <div class="mh"><b>Cotización OPP-0387</b><span><span class="chip nueva sw" data-hide="4400">V1 vigente</span><span class="chip seguimiento sw" data-t="4400">V2 vigente</span></span></div>
           <div class="doc" data-t="300">
             <div class="dl hd"><span><i class="logo"></i>Tu membrete</span><span>COT-0387</span></div>
@@ -950,32 +1062,120 @@
             <div class="dw" data-t="2400">Son: un millón doscientos ochenta y cuatro mil trescientos veinte pesos 00/100 M.N.</div>
           </div>
           <div class="mf" data-t="3200"><span class="btn-m">Generar PDF</span><span class="mute sw" data-t="4400">V1 archivada, no se pierde</span></div>
-        </div></li>
-        <li><span class="chip seguimiento">En negociación</span><div><h3>Seguimiento con fecha y responsable</h3><p>Tareas con fecha, recordatorios y cada nota del cliente en su expediente. Nadie tiene que preguntar "¿en qué quedó eso?".</p></div><div class="mini" data-loop="8500" aria-hidden="true">
+        </div>
+          <div class="mini" data-scene="4" data-loop="8500" aria-hidden="true">
           <div class="mh"><b>Seguimiento · OPP-0387</b><span class="chip seguimiento">En negociación</span></div>
           <div class="mr"><span class="g">Enviar muestras físicas</span><span class="mute">Ángel · <span class="sw" data-hide="1900">20 sep</span><span class="sw" data-t="1900">17 sep</span></span><span class="chip prog sw" data-hide="3200">en curso</span><span class="chip ok sw" data-t="3200">hecho</span></div>
           <div class="mr"><span class="g">Llamar a compras</span><span class="mute">Ángel · 22 sep</span><span class="chip nueva sw" data-hide="3900">programado</span><span class="chip prog sw" data-t="3900">recordatorio</span></div>
           <div class="note" data-t="1000">Cliente pide las muestras el 17, no el 20<span class="mute"> · Ángel, WhatsApp</span></div>
           <div class="sys" data-t="1900">Fecha movida al 17 sep · aviso a Ángel y Emily</div>
           <div class="mf" data-t="4600"><span>Nadie pregunta "¿en qué quedó eso?"</span><span class="mute">en el expediente</span></div>
-        </div></li>
-        <li><span class="chip ganada">Ganada</span><div><h3>El expediente se vuelve proyecto</h3><p>Órdenes de compra a proveedores con firma electrónica. Tallas, entregas, inventario o extraordinarias de obra, según tu negocio.</p></div><div class="mini" data-loop="9000" aria-hidden="true">
+        </div>
+          <div class="mini" data-scene="5" data-loop="9000" aria-hidden="true">
           <div class="mh"><b>OPP-0387 · Uniformes, Policía Estatal</b><span class="chip seguimiento sw" data-hide="800">En negociación</span><span class="chip ganada sw" data-t="800">Ganada</span></div>
           <div class="sys" data-t="1400">Proyecto <b>PRY-0142</b> creado a partir del expediente</div>
           <div class="mr" data-t="2000"><span class="g">OC-0201 · Calzado Industrial</span><span class="n">$349,960</span><span class="chip validacion sw" data-hide="3400">por firmar</span><span class="chip ok sw" data-t="3400">firmada</span></div>
           <div class="mr" data-t="2400"><span class="g">OC-0202 · Importadora Lux</span><span class="n">$49,440</span><span class="chip validacion sw" data-hide="4200">por firmar</span><span class="chip ok sw" data-t="4200">firmada</span></div>
           <div class="mr" data-t="2800"><span class="g">Tallas por corporación</span><span class="n">340 pzas</span><span class="chip ok">todo cuadra</span></div>
           <div class="mf" data-t="4900"><span>Firmas en orden: compras, dirección, proveedor</span></div>
-        </div></li>
-        <li><span class="chip ok">Cobrado</span><div><h3>Estado de cuenta por proyecto</h3><p>Qué se cobró, qué falta y qué ya venció, con abonos parciales. Se exporta a PDF o Excel.</p></div><div class="mini" data-loop="8500" aria-hidden="true">
+        </div>
+          <div class="mini" data-scene="6" data-loop="8500" aria-hidden="true">
           <div class="mh"><b>Estado de cuenta · PRY-0142</b><span class="n">$1,284,320.00</span></div>
           <div class="bar" data-t="300"><i style="--w:30%" data-t="600"></i><i style="--w:80%" data-t="2900"></i></div>
           <div class="mr" data-t="900"><span class="g">Anticipo 30%</span><span class="n">$385,296</span><span class="chip ok">cobrado</span></div>
           <div class="mr" data-t="1300"><span class="g">Contra entrega 50%</span><span class="n">$642,160</span><span class="chip prog sw" data-hide="2900">programado 15 oct</span><span class="chip ok sw" data-t="2900">cobrado</span></div>
           <div class="mr" data-t="1700"><span class="g">Finiquito 20%</span><span class="n">$256,864</span><span class="chip validacion">vence 30 nov</span></div>
           <div class="mf" data-t="3700"><span>Cobrado <b>80%</b> · vencido <b>$0</b></span><span class="mute">Exportar PDF · Excel</span></div>
-        </div></li>
-      </ol>
+        </div>
+          </div>
+        </div>
+        <ol class="stages">
+        <li data-stage="0" class="on">
+          <div class="stage-text">
+            <span class="chip nueva">Nueva oportunidad</span>
+            <h3>Entra con todo lo que hace falta</h3>
+            <p>Desde el portal o con un WhatsApp, con folio, cliente y fecha.</p>
+            <ul class="checks">
+              <li>Se crea desde el portal o con un WhatsApp</li>
+              <li>Folio, cliente, vendedor y fecha de cierre desde el inicio</li>
+              <li>La lista del cliente en Excel o PDF se importa lista para costear</li>
+            </ul>
+          </div>
+        </li>
+        <li data-stage="1">
+          <div class="stage-text">
+            <span class="chip coste">En costeo</span>
+            <h3>Cada línea con su costo real</h3>
+            <p>Compras confirma precios y la utilidad se calcula sola.</p>
+            <ul class="checks">
+              <li>Compras confirma insumos, mano de obra y proveedor</li>
+              <li>Tus fórmulas de costo, no las de un CRM genérico</li>
+              <li>La utilidad la ve solo quien tú decidas</li>
+            </ul>
+          </div>
+        </li>
+        <li data-stage="2">
+          <div class="stage-text">
+            <span class="chip validacion">Validación</span>
+            <h3>Nada se cotiza sin que dirección lo valide</h3>
+            <p>Dirección revisa y aprueba antes de que salga la cotización.</p>
+            <ul class="checks">
+              <li>El portal avisa líneas con poco margen y precios sin confirmar</li>
+              <li>Dirección aprueba desde el portal o desde el celular</li>
+              <li>Queda un PDF con las cifras congeladas de ese momento</li>
+            </ul>
+          </div>
+        </li>
+        <li data-stage="3">
+          <div class="stage-text">
+            <span class="chip seguimiento">Cotizada</span>
+            <h3>PDF con tu membrete, en un clic</h3>
+            <p>Sale del costeo, sin copiar nada.</p>
+            <ul class="checks">
+              <li>Monto en letras y datos de tu empresa</li>
+              <li>Versiones V1, V2, V3: la vigente es la que tiene el cliente</li>
+              <li>Las anteriores se guardan, no se pierden</li>
+            </ul>
+          </div>
+        </li>
+        <li data-stage="4">
+          <div class="stage-text">
+            <span class="chip seguimiento">En negociación</span>
+            <h3>Seguimiento con fecha y responsable</h3>
+            <p>Tareas, recordatorios y cada nota en su expediente.</p>
+            <ul class="checks">
+              <li>Tareas con fecha y recordatorio por WhatsApp</li>
+              <li>Cada nota del cliente queda en su expediente</li>
+              <li>Nadie tiene que preguntar "¿en qué quedó eso?"</li>
+            </ul>
+          </div>
+        </li>
+        <li data-stage="5">
+          <div class="stage-text">
+            <span class="chip ganada">Ganada</span>
+            <h3>El expediente se vuelve proyecto</h3>
+            <p>Órdenes de compra, tallas y entregas, o estimaciones si es obra.</p>
+            <ul class="checks">
+              <li>Órdenes de compra a proveedor con firma electrónica</li>
+              <li>Tallas, entregas e inventario; o contrato y estimaciones en obra</li>
+              <li>Todo cuadra contra lo que se cotizó</li>
+            </ul>
+          </div>
+        </li>
+        <li data-stage="6">
+          <div class="stage-text">
+            <span class="chip ok">Cobrado</span>
+            <h3>Estado de cuenta por proyecto</h3>
+            <p>Qué se cobró, qué falta y qué ya venció.</p>
+            <ul class="checks">
+              <li>Cobrado, pendiente y vencido, con abonos parciales</li>
+              <li>Aviso por WhatsApp cuando algo vence</li>
+              <li>Se exporta a PDF o Excel cuando quieras</li>
+            </ul>
+          </div>
+        </li>
+        </ol>
+      </div>
 
       <div class="killer">
         <div class="killer-text">
@@ -1022,407 +1222,6 @@
     </div>
   </section>
 
-  <!-- ============ CASOS DE USO ============ -->
-  <section class="block" id="casos">
-    <div class="wide">
-      <div class="section-head">
-        <div>
-          <p class="eyebrow">Casos de uso</p>
-          <h2>Dos negocios distintos,<br>dos portales distintos.</h2>
-        </div>
-        <p class="lede">Tratto nació en dos empresas reales: una que vende uniformes a gobierno y una constructora de obra eléctrica. Cada portal se construyó con su equipo, y por eso se parecen en la base y cambian en todo lo demás.</p>
-      </div>
-      <div class="cases">
-        <article class="card">
-          <p class="case-tag"><b>Si vendes productos</b> Negocios B2B y proveedores de gobierno</p>
-          <h3>Cada producto con su costo completo, su margen y sus tallas.</h3>
-          <div class="flow">
-            <span class="chip coste">Costeo por SKU</span><span class="sep"></span>
-            <span class="chip seguimiento">Licitación</span><span class="sep"></span>
-            <span class="chip ganada">Ganada</span><span class="sep"></span>
-            <span class="chip accent">Tallas y OC</span><span class="sep"></span>
-            <span class="chip ok">Entrega</span>
-          </div>
-          <ul>
-            <li><b>Costo completo por producto:</b> precio de distribuidor en dólares, descuento, gastos, bordados y margen.</li>
-            <li><b>Tallas por corporación</b> y el expediente de la licitación: bases, muestras, fianza.</li>
-            <li><b>Orden de compra por proveedor</b> con firma electrónica, inventario y entregas.</li>
-          </ul>
-        </article>
-        <article class="card">
-          <p class="case-tag"><b>Si cotizas obra</b> Constructoras e instaladores</p>
-          <h3>Cada partida con su receta de costo.</h3>
-          <div class="flow">
-            <span class="chip nueva">Catálogo del cliente</span><span class="sep"></span>
-            <span class="chip coste">Receta</span><span class="sep"></span>
-            <span class="chip seguimiento">Cotización</span><span class="sep"></span>
-            <span class="chip ganada">Contrato</span><span class="sep"></span>
-            <span class="chip ok">Estimaciones</span>
-          </div>
-          <ul>
-            <li><b>Receta por concepto:</b> insumos, mano de obra, maquinaria e indirectos. El costo sale de la receta, el precio lo pones tú.</li>
-            <li><b>Subes el catálogo del cliente,</b> aunque tenga 271 partidas, y sale listo para costear.</li>
-            <li><b>Contrato, extraordinarias y estimaciones</b> en el mismo expediente, con estado de cuenta por obra.</li>
-          </ul>
-        </article>
-      </div>
-      <div class="fig-head">
-        <p class="eyebrow">Así se ve por dentro</p>
-        <h3>Una oportunidad abierta. Cambia de negocio y recorre las pestañas.</h3>
-      </div>
-    <figure class="portal-fig" aria-label="Vista del portal: una oportunidad abierta. Cambia entre un negocio B2B y una constructora, y recorre las pestañas.">
-      <div class="seg" role="tablist" aria-label="Elige el tipo de negocio">
-        <span class="seg-label">Ver el portal de</span>
-        <button type="button" role="tab" class="on" data-mock="b2b" aria-selected="true">Negocio B2B</button>
-        <button type="button" role="tab" data-mock="obra" aria-selected="false">Constructora</button>
-      </div>
-      <div class="frame">
-        <div class="app" data-app="b2b">
-          <aside class="side">
-            <div class="logo"><i>T</i> Tácticos del Bajío</div>
-            <div class="item">Inicio</div>
-            <div class="item">Anuncios</div>
-            <div class="group">Ventas</div>
-            <div class="item active">Oportunidades</div>
-            <div class="item">Oportunidades Web</div>
-            <div class="item">Costeo</div>
-            <div class="item">Validación Costeo</div>
-            <div class="group">Proyectos</div>
-            <div class="item">Documentación y Tallas</div>
-            <div class="item">Órdenes de Compra</div>
-            <div class="item">Reporte de Proyectos</div>
-            <div class="item">Logística</div>
-            <div class="group">Catálogos</div>
-            <div class="item">Productos</div>
-            <div class="item">Instituciones</div>
-            <div class="item">Contactos</div>
-            <div class="item">Proveedores</div>
-            <div class="item">Inventario</div>
-            <div class="spacer"></div>
-            <div class="item">Análisis</div>
-            <div class="item">Configuración</div>
-            <div class="user"><i>E</i><div><b>Elena Vargas</b><small>Administración</small></div></div>
-          </aside>
-          <div class="main">
-            <div class="back">‹ Volver a Oportunidades</div>
-            <div class="hd">
-              <div>
-                <h4>Uniformes operativos 2026, Policía Estatal <span class="chip validacion">Costeo confirmado</span></h4>
-                <div class="meta">Institución: <b>Secretaría de Seguridad Pública de Guanajuato</b> · Folio: <b class="mono">OPP-0387</b> · Licitación: <b class="mono">LPE-GTO-2026-041</b></div>
-                <div class="meta2">actualizado hace 4 min · Vendedor: <b>Ángel Ramos</b> · Compras: <b>Emily Torres</b> · Cierre: <b class="mono">2026-09-30</b></div>
-              </div>
-              <div class="acts"><span class="btn-sm primary">Generar cotización</span><span class="btn-sm">Acciones ▾</span></div>
-            </div>
-            <div class="tabs" role="tablist" aria-label="Pestañas de la oportunidad">
-              <button type="button" role="tab" data-tab="actualizaciones">Actualizaciones</button><button type="button" role="tab" class="on" data-tab="cotizacion" aria-selected="true">Cotización</button><button type="button" role="tab" data-tab="embellecimientos">Embellecimientos</button><button type="button" role="tab" class="hide-sm" data-tab="nuevos">Nuevos productos</button><button type="button" role="tab" class="hide-sm" data-tab="documentacion">Documentación</button><button type="button" role="tab" class="hide-md" data-tab="tallas">Tallas</button><button type="button" role="tab" class="hide-md" data-tab="actividad">Actividad</button><button type="button" role="tab" class="hide-md" data-tab="historial">Historial</button>
-            </div>
-            <div class="panels">
-
-            <div class="tp" data-panel="cotizacion" role="tabpanel">
-              <div class="toolbar">
-                <div class="vchips"><span class="vchip">V1</span></div>
-                <div class="acts"><span class="btn-sm">PDF ▾</span><span class="btn-sm primary">Vista previa</span></div>
-              </div>
-              <table class="grid">
-                <thead><tr>
-                  <th>Producto</th><th class="hide-sm">SKU</th><th class="n">Cantidad</th><th class="n hide-sm">Costo distr. USD</th><th class="n hide-md">Desc.</th><th class="n hide-md">Embellec.</th><th class="n">Costo c/u</th><th class="n hide-md">Margen gob</th><th class="n">Precio de venta c/u</th><th class="n">Utilidad</th>
-                </tr></thead>
-                <tbody>
-                  <tr><td class="c">Chamarra táctica softshell, negra</td><td class="mono hide-sm">CT-2040</td><td class="n">340</td><td class="n hide-sm">$58.00</td><td class="n hide-md">18%</td><td class="n hide-md">$45.00</td><td class="n">$1,014.46</td><td class="n hide-md">6%</td><td class="n">$1,390.00</td><td class="n">21.0%</td></tr>
-                  <tr><td class="c">Pantalón táctico ripstop, negro</td><td class="mono hide-sm">PT-1120</td><td class="n">340</td><td class="n hide-sm">$32.00</td><td class="n hide-md">18%</td><td class="n hide-md">$0.00</td><td class="n">$534.83</td><td class="n hide-md">6%</td><td class="n">$745.00</td><td class="n">22.2%</td></tr>
-                  <tr><td class="c">Bota táctica 8", piel y cordura</td><td class="mono hide-sm">BT-0810</td><td class="n">340</td><td class="n hide-sm">$64.50</td><td class="n hide-md">15%</td><td class="n hide-md">$0.00</td><td class="n">$1,117.36</td><td class="n hide-md">6%</td><td class="n">$1,520.00</td><td class="n">20.5%</td></tr>
-                  <tr><td class="c">Gorra operativa con escudo bordado</td><td class="mono hide-sm">GO-0030</td><td class="n">340</td><td class="n hide-sm">$6.20</td><td class="n hide-md">10%</td><td class="n hide-md">$18.00</td><td class="n">$131.75</td><td class="n hide-md">6%</td><td class="n">$195.00</td><td class="n">26.4%</td></tr>
-                  <tr><td class="c">Chaleco portaplacas MOLLE, nivel IIIA</td><td class="mono hide-sm">CP-3300</td><td class="n">120</td><td class="n hide-sm">$89.00</td><td class="n hide-md">20%</td><td class="n hide-md">$0.00</td><td class="n">$1,451.31</td><td class="n hide-md">6%</td><td class="n">$1,980.00</td><td class="n">20.7%</td></tr>
-                  <tr class="tot"><td class="c">Totales</td><td class="hide-sm"></td><td class="n">1,480</td><td class="n hide-sm"></td><td class="n hide-md"></td><td class="n hide-md"></td><td class="n">$1,125,613.20</td><td class="n hide-md"></td><td class="n">$1,546,600.00</td><td class="n">21.2%</td></tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="tp" data-panel="actualizaciones" role="tabpanel" hidden>
-              <div class="compose">Escribe una actualización… <span>@ para mencionar a alguien</span></div>
-              <div class="feed">
-                <div class="post"><i>AR</i><div><b>Ángel Ramos</b> <small>ayer, 16:10</small><p>Las bases piden muestra física de chamarra y bota antes del 20 de septiembre. <span class="m">@Emily Torres</span> ¿tenemos en inventario?</p></div></div>
-                <div class="post"><i>ET</i><div><b>Emily Torres</b> <small>hoy, 08:55</small><p>Chamarra sí: 12 piezas en almacén León. Bota no; le pido muestra a Calzado Industrial hoy mismo.</p></div></div>
-                <div class="post sys"><i>·</i><div><b>Portal</b> <small>hoy, 09:30</small><p>Etapa cambió de <b>Costeo en validación</b> a <b>Costeo confirmado</b>. Validó Elena Vargas.</p></div></div>
-                <div class="post"><i>EV</i><div><b>Elena Vargas</b> <small>hoy, 09:31</small><p>Validado con margen a gobierno del 6%. Ya pueden generar la cotización para la propuesta económica.</p></div></div>
-                <div class="post sys"><i>·</i><div><b>WhatsApp · Ángel Ramos</b> <small>hoy, 11:02</small><p>Cliente confirma 340 elementos de Policía Estatal y 120 chalecos. Cierre 30 sep.</p></div></div>
-              </div>
-            </div>
-
-            <div class="tp" data-panel="embellecimientos" role="tabpanel" hidden>
-              <div class="toolbar"><span class="mini">Bordados y serigrafía por zona · el costo entra a la cadena de costo de la línea</span><span class="btn-sm">Subir arte</span></div>
-              <table class="grid">
-                <thead><tr><th>Producto</th><th>Zona</th><th class="hide-sm">Técnica</th><th class="hide-md">Diseño</th><th class="n">Costo c/u</th><th>Arte</th></tr></thead>
-                <tbody>
-                  <tr><td class="c">Chamarra táctica softshell</td><td>Espalda</td><td class="hide-sm">Bordado</td><td class="hide-md">POLICÍA ESTATAL, 28 cm, hilo reflejante</td><td class="n">$28.00</td><td><span class="chip ok">aprobado</span></td></tr>
-                  <tr><td class="c">Chamarra táctica softshell</td><td>Frente izquierdo</td><td class="hide-sm">Bordado</td><td class="hide-md">Escudo institucional, 8 cm</td><td class="n">$17.00</td><td><span class="chip ok">aprobado</span></td></tr>
-                  <tr><td class="c">Gorra operativa</td><td>Frente</td><td class="hide-sm">Bordado 3D</td><td class="hide-md">Escudo institucional, 6 cm</td><td class="n">$18.00</td><td><span class="chip validacion">arte pendiente</span></td></tr>
-                  <tr><td class="c">Chaleco portaplacas</td><td>Espalda</td><td class="hide-sm">Parche velcro</td><td class="hide-md">POLICÍA, 25 cm</td><td class="n">incluido</td><td><span class="chip ok">aprobado</span></td></tr>
-                  <tr><td class="c">Pantalón táctico ripstop</td><td colspan="4" class="mini">Sin embellecimiento</td><td></td></tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="tp" data-panel="nuevos" role="tabpanel" hidden>
-              <div class="toolbar"><span class="mini">Productos que el cliente pidió y no están en el catálogo · compras los cotiza</span><span class="btn-sm primary">Proponer producto</span></div>
-              <table class="grid">
-                <thead><tr><th>Producto propuesto</th><th class="hide-sm">Propuso</th><th class="n">Cantidad</th><th class="hide-md">Proveedor</th><th>Estado</th></tr></thead>
-                <tbody>
-                  <tr><td class="c">Guante táctico media palma, negro</td><td class="hide-sm">Ángel Ramos</td><td class="n">340</td><td class="hide-md">Calzado Industrial</td><td><span class="chip coste">compras cotizando</span></td></tr>
-                  <tr><td class="c">Lámpara táctica 1,000 lm recargable</td><td class="hide-sm">Ángel Ramos</td><td class="n">120</td><td class="hide-md">Importadora Lux</td><td><span class="chip ok">cotizado · $412.00</span></td></tr>
-                  <tr><td class="c">Cinturón táctico con hebilla metálica</td><td class="hide-sm">Ángel Ramos</td><td class="n">340</td><td class="hide-md">–</td><td><span class="chip nueva">propuesto</span></td></tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="tp" data-panel="documentacion" role="tabpanel" hidden>
-              <div class="toolbar"><span class="mini">Expediente de la licitación · carpeta por oportunidad</span><span class="btn-sm">Subir documento</span></div>
-              <table class="grid">
-                <thead><tr><th>Documento</th><th>Tipo</th><th class="hide-sm">Subió</th><th class="hide-md">Fecha</th><th>Estado</th></tr></thead>
-                <tbody>
-                  <tr><td class="c mono">bases-LPE-GTO-2026-041.pdf</td><td>bases de licitación</td><td class="hide-sm">Ángel Ramos</td><td class="mono hide-md">2026-08-20</td><td><span class="chip ok">completo</span></td></tr>
-                  <tr><td class="c mono">anexo-tecnico-uniformes.pdf</td><td>anexo técnico</td><td class="hide-sm">Ángel Ramos</td><td class="mono hide-md">2026-08-20</td><td><span class="chip ok">completo</span></td></tr>
-                  <tr><td class="c mono">OPP-0387-cotizacion-V1.pdf</td><td>propuesta económica</td><td class="hide-sm">Portal</td><td class="mono hide-md">pendiente</td><td><span class="chip prog">se genera al cotizar</span></td></tr>
-                  <tr><td class="c mono">acta-muestras-fisicas.pdf</td><td>muestras físicas</td><td class="hide-sm">–</td><td class="mono hide-md">antes del 20 sep</td><td><span class="chip validacion">pendiente</span></td></tr>
-                  <tr><td class="c mono">fianza-cumplimiento.pdf</td><td>fianza</td><td class="hide-sm">Administración</td><td class="mono hide-md">–</td><td><span class="chip nueva">al ganar</span></td></tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="tp" data-panel="tallas" role="tabpanel" hidden>
-              <div class="toolbar"><span class="mini">Chamarra táctica CT-2040 · 340 pzas · por corporación</span><span class="btn-sm primary">Todo cuadra</span></div>
-              <table class="grid">
-                <thead><tr><th>Corporación</th><th class="n">CH</th><th class="n">M</th><th class="n">G</th><th class="n">XG</th><th class="n hide-sm">2XG</th><th class="n">Total</th><th class="hide-md">OC del cliente</th></tr></thead>
-                <tbody>
-                  <tr><td class="c">Policía Estatal</td><td class="n">28</td><td class="n">74</td><td class="n">66</td><td class="n">31</td><td class="n hide-sm">11</td><td class="n">210</td><td class="mono hide-md">OC 4471-2026</td></tr>
-                  <tr><td class="c">Tránsito del Estado</td><td class="n">12</td><td class="n">40</td><td class="n">38</td><td class="n">22</td><td class="n hide-sm">8</td><td class="n">120</td><td class="mono hide-md">OC 4471-2026</td></tr>
-                  <tr><td class="c">Bomberos</td><td class="n">–</td><td class="n">–</td><td class="n">–</td><td class="n">–</td><td class="n hide-sm">–</td><td class="n">10</td><td class="hide-md"><span class="chip validacion">tallas pendientes</span></td></tr>
-                  <tr class="tot"><td class="c">Capturado</td><td class="n">40</td><td class="n">114</td><td class="n">104</td><td class="n">53</td><td class="n hide-sm">19</td><td class="n">330 / 340</td><td class="hide-md"></td></tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="tp" data-panel="actividad" role="tabpanel" hidden>
-              <div class="toolbar"><span class="mini">5 actividades · 2 pendientes</span><span class="btn-sm">Nueva actividad</span></div>
-              <table class="grid">
-                <thead><tr><th>Actividad</th><th>Responsable</th><th class="hide-sm">Fecha límite</th><th>Estado</th><th class="hide-md">Depende de</th></tr></thead>
-                <tbody>
-                  <tr><td class="c">Subir bases y anexo técnico</td><td>Ángel Ramos</td><td class="mono hide-sm">2026-08-22</td><td><span class="chip ok">hecho</span></td><td class="hide-md">–</td></tr>
-                  <tr><td class="c">Confirmar precios de proveedor</td><td>Emily Torres</td><td class="mono hide-sm">2026-09-01</td><td><span class="chip ok">hecho</span></td><td class="hide-md">–</td></tr>
-                  <tr><td class="c">Validar costeo</td><td>Elena Vargas</td><td class="mono hide-sm">2026-09-04</td><td><span class="chip ok">hecho</span></td><td class="hide-md">Confirmar precios de proveedor</td></tr>
-                  <tr><td class="c">Enviar muestras físicas</td><td>Ángel Ramos</td><td class="mono hide-sm">2026-09-18</td><td><span class="chip prog">en curso</span></td><td class="hide-md">–</td></tr>
-                  <tr><td class="c">Tramitar fianza de cumplimiento</td><td>Administración</td><td class="mono hide-sm">al ganar</td><td><span class="chip nueva">bloqueada</span></td><td class="hide-md">Etapa Ganada</td></tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="tp" data-panel="historial" role="tabpanel" hidden>
-              <div class="toolbar"><span class="mini">Cada cambio con autor, valor anterior y nuevo · un administrador puede revertir</span><span class="btn-sm">Deshacer rango</span></div>
-              <table class="grid">
-                <thead><tr><th class="hide-sm">Fecha</th><th>Quién</th><th>Cambio</th><th class="hide-md">Antes</th><th>Después</th></tr></thead>
-                <tbody>
-                  <tr><td class="mono hide-sm">09-04 11:02</td><td>Ángel Ramos <span class="mini">· WhatsApp</span></td><td class="c">Nota agregada</td><td class="hide-md">–</td><td>"Cliente confirma 340 elementos…"</td></tr>
-                  <tr><td class="mono hide-sm">09-04 09:30</td><td>Elena Vargas</td><td class="c">Etapa</td><td class="hide-md">Costeo en validación</td><td>Costeo confirmado</td></tr>
-                  <tr><td class="mono hide-sm">09-03 15:48</td><td>Emily Torres</td><td class="c">Bota táctica BT-0810 · descuento distribuidor</td><td class="mono hide-md">12%</td><td class="mono">15%</td></tr>
-                  <tr><td class="mono hide-sm">09-03 15:40</td><td>Emily Torres</td><td class="c">Chamarra CT-2040 · costo distribuidor</td><td class="mono hide-md">$61.00 USD</td><td class="mono">$58.00 USD</td></tr>
-                  <tr><td class="mono hide-sm">09-02 10:15</td><td>Ángel Ramos</td><td class="c">Chaleco CP-3300 · cantidad</td><td class="mono hide-md">100</td><td class="mono">120</td></tr>
-                  <tr><td class="mono hide-sm">08-20 09:00</td><td>Ángel Ramos</td><td class="c">Etapa</td><td class="hide-md">Nueva oportunidad</td><td>En costeo</td></tr>
-                </tbody>
-              </table>
-            </div>
-
-            </div>
-          </div>
-        </div>
-        <div class="app" data-app="obra" hidden>
-          <aside class="side">
-            <div class="logo"><i>T</i> Aceros del Bajío</div>
-            <div class="item">Inicio</div>
-            <div class="item">Anuncios</div>
-            <div class="group">Ventas</div>
-            <div class="item active">Oportunidades</div>
-            <div class="item">Validación Costeo</div>
-            <div class="item">Reporte de Proyectos</div>
-            <div class="group">Catálogos</div>
-            <div class="item">Conceptos</div>
-            <div class="item">Insumos</div>
-            <div class="item">Mano de Obra</div>
-            <div class="item">Maquinaria</div>
-            <div class="item">Indirectos</div>
-            <div class="item">Clientes</div>
-            <div class="item">Proveedores</div>
-            <div class="spacer"></div>
-            <div class="item">Análisis</div>
-            <div class="item">Configuración</div>
-            <div class="user"><i>R</i><div><b>Rocío Medina</b><small>Dirección</small></div></div>
-          </aside>
-          <div class="main">
-            <div class="back">‹ Volver a Oportunidades</div>
-            <div class="hd">
-              <div>
-                <h4>Ampliación de subestación, Planta Norte <span class="chip coste">En costeo</span></h4>
-                <div class="meta">Cliente: <b>Grupo Industrial Sureste SA de CV</b> · Folio: <b class="mono">OPP-1042</b></div>
-                <div class="meta2">actualizado hace 12 min · Vendedor: <b>Carlos Ventas</b> · Comprador: <b>Diana Compras</b> · Cierre: <b class="mono">2026-10-15</b></div>
-              </div>
-              <div class="acts"><span class="btn-sm primary">Generar cotización</span><span class="btn-sm">Acciones ▾</span></div>
-            </div>
-            <div class="tabs" role="tablist" aria-label="Pestañas de la oportunidad">
-              <button type="button" role="tab" data-tab="actualizaciones">Actualizaciones</button><button type="button" role="tab" class="on" data-tab="cotizacion" aria-selected="true">Cotización</button><button type="button" role="tab" data-tab="insumos">Insumos</button><button type="button" role="tab" class="hide-sm" data-tab="proveedores">Cotizaciones proveedores</button><button type="button" role="tab" class="hide-sm" data-tab="mano">Mano de Obra</button><button type="button" role="tab" class="hide-md" data-tab="maquinaria">Maquinaria</button><button type="button" role="tab" class="hide-md" data-tab="indirectos">Indirectos</button><button type="button" role="tab" class="hide-md" data-tab="actividades">Actividades</button><button type="button" role="tab" class="hide-md" data-tab="documentos">Documentos</button><button type="button" role="tab" class="hide-md" data-tab="historial">Historial</button>
-            </div>
-            <div class="panels">
-
-            <div class="tp" data-panel="cotizacion" role="tabpanel">
-            <div class="toolbar">
-              <div class="vchips"><span class="vchip">V2</span><span class="vchip off">V1</span></div>
-              <div class="acts"><span class="btn-sm">PDF ▾</span><span class="btn-sm primary">Vista previa</span></div>
-            </div>
-            <table class="grid">
-              <thead><tr>
-                <th>Concepto</th><th>Unidad</th><th class="n">Cantidad</th><th class="n hide-sm">P.U. mano de obra</th><th class="n hide-sm">P.U. materiales</th><th class="n hide-md">P.U. maquinaria</th><th class="n">Precio de venta c/u</th><th class="n hide-md">IVA</th>
-              </tr></thead>
-              <tbody>
-                <tr><td class="c">Fabricación de registro colado en sitio, 1.6 × 1.6 × 2.65 m (tipo 1–4 MV)</td><td>PZA</td><td class="n">26.5</td><td class="n hide-sm">$184.07</td><td class="n hide-sm">$323.72</td><td class="n hide-md">$0.00</td><td class="n">$1,300.50</td><td class="n hide-md">16%</td></tr>
-                <tr><td class="c">Conductor de aluminio XLPE 250 kcmil, 25 kV, aislamiento 100%</td><td>ML</td><td class="n">47.8</td><td class="n hide-sm">$124.71</td><td class="n hide-sm">$173.74</td><td class="n hide-md">$0.00</td><td class="n">$330.60</td><td class="n hide-md">16%</td></tr>
-                <tr><td class="c">Canalización 8T × 80 mm (telecomunicaciones)</td><td>ML</td><td class="n">9.0</td><td class="n hide-sm">$81.75</td><td class="n hide-sm">$295.15</td><td class="n hide-md">$0.00</td><td class="n">$431.81</td><td class="n hide-md">16%</td></tr>
-                <tr><td class="c">Cable de cobre desnudo 2 AWG (35 mm²)</td><td>ML</td><td class="n">21.9</td><td class="n hide-sm">$110.65</td><td class="n hide-sm">$118.86</td><td class="n hide-md">$0.00</td><td class="n">$249.39</td><td class="n hide-md">16%</td></tr>
-                <tr><td class="c">Canalización 3T × 160 mm (6") tipo 3 LV</td><td>ML</td><td class="n">20.1</td><td class="n hide-sm">$137.79</td><td class="n hide-sm">$164.62</td><td class="n hide-md">$0.00</td><td class="n">$368.33</td><td class="n hide-md">16%</td></tr>
-                <tr><td class="c">Transformador tipo pedestal 500 kVA, 23 kV / 220–127 V</td><td>PZA</td><td class="n">1.0</td><td class="n hide-sm">$6,400.00</td><td class="n hide-sm">$318,900.00</td><td class="n hide-md">$4,200.00</td><td class="n">$389,760.00</td><td class="n hide-md">16%</td></tr>
-                <tr class="tot"><td class="c">Totales</td><td></td><td class="n">126.3</td><td class="n hide-sm">$21,406.10</td><td class="n hide-sm">$345,187.62</td><td class="n hide-md">$4,200.00</td><td class="n">$462,118.83</td><td class="n hide-md"></td></tr>
-              </tbody>
-            </table>
-            </div>
-
-            <div class="tp" data-panel="actualizaciones" role="tabpanel" hidden>
-              <div class="compose">Escribe una actualización… <span>@ para mencionar a alguien</span></div>
-              <div class="feed">
-                <div class="post"><i>CV</i><div><b>Carlos Ventas</b> <small>ayer, 17:40</small><p>El cliente pide entrega en dos fases: subestación primero, canalizaciones después. <span class="m">@Diana Compras</span> ¿afecta el costeo de fletes?</p></div></div>
-                <div class="post"><i>DC</i><div><b>Diana Compras</b> <small>hoy, 09:12</small><p>Sí, el flete de Conductores del Norte se parte en dos. Ya les pedí recotizar; lo tengo el jueves.</p></div></div>
-                <div class="post sys"><i>·</i><div><b>Portal</b> <small>hoy, 09:14</small><p>Actividad <b>Pedir cotización a Conductores del Norte</b> asignada a Diana Compras, fecha límite 8 sep.</p></div></div>
-                <div class="post"><i>RM</i><div><b>Rocío Medina</b> <small>hoy, 10:05</small><p>Que la V3 salga con las dos fases separadas. No validamos hasta que estén los indirectos.</p></div></div>
-                <div class="post sys"><i>·</i><div><b>WhatsApp · Carlos Ventas</b> <small>hoy, 10:43</small><p>Diana confirma indirectos el jueves, cliente quiere V3 con dos fases.</p></div></div>
-              </div>
-            </div>
-
-            <div class="tp" data-panel="insumos" role="tabpanel" hidden>
-              <div class="toolbar"><span class="mini">6 insumos en 4 conceptos · 3 confirmados</span><span class="btn-sm">Confirmar insumos</span></div>
-              <table class="grid">
-                <thead><tr><th>Insumo</th><th class="hide-sm">Concepto</th><th>Unidad</th><th class="n">Cantidad</th><th class="hide-md">Proveedor</th><th class="n">Costo unitario</th><th class="n hide-sm">Total</th><th>Etapa costeo</th></tr></thead>
-                <tbody>
-                  <tr><td class="c">Tubo PAD 160 mm, 6"</td><td class="hide-sm">Canalización 3T × 160 mm</td><td>ML</td><td class="n">60.3</td><td class="hide-md">Tuberías del Centro</td><td class="n">$98.40</td><td class="n hide-sm">$5,933.52</td><td><span class="chip ok">confirmado</span></td></tr>
-                  <tr><td class="c">Concreto f'c 200 kg/cm²</td><td class="hide-sm">Registro colado en sitio</td><td>M3</td><td class="n">18.2</td><td class="hide-md">Cemex</td><td class="n">$2,180.00</td><td class="n hide-sm">$39,676.00</td><td><span class="chip ok">confirmado</span></td></tr>
-                  <tr><td class="c">Conductor XLPE 250 kcmil, 25 kV</td><td class="hide-sm">Conductor de aluminio</td><td>ML</td><td class="n">50.0</td><td class="hide-md">Conductores del Norte</td><td class="n">$168.20</td><td class="n hide-sm">$8,410.00</td><td><span class="chip coste">en cotización</span></td></tr>
-                  <tr><td class="c">Cable de cobre desnudo 2 AWG</td><td class="hide-sm">Cable de cobre desnudo</td><td>ML</td><td class="n">23.0</td><td class="hide-md">Conductores del Norte</td><td class="n">$112.90</td><td class="n hide-sm">$2,596.70</td><td><span class="chip coste">en cotización</span></td></tr>
-                  <tr><td class="c">Cople y cinta para PAD</td><td class="hide-sm">Canalización 3T × 160 mm</td><td>JGO</td><td class="n">20.0</td><td class="hide-md">Tuberías del Centro</td><td class="n">$41.00</td><td class="n hide-sm">$820.00</td><td><span class="chip ok">confirmado</span></td></tr>
-                  <tr><td class="c">Transformador pedestal 500 kVA</td><td class="hide-sm">Transformador tipo pedestal</td><td>PZA</td><td class="n">1.0</td><td class="hide-md">Prolec</td><td class="n">$318,900.00</td><td class="n hide-sm">$318,900.00</td><td><span class="chip validacion">precio por validar</span></td></tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="tp" data-panel="proveedores" role="tabpanel" hidden>
-              <div class="toolbar"><span class="mini">Expediente de compra · un renglón por proveedor</span><span class="btn-sm">Pedir cotización</span></div>
-              <table class="grid">
-                <thead><tr><th>Proveedor</th><th class="hide-sm">Partidas</th><th>Moneda</th><th class="hide-md">Entrega</th><th>Documento</th><th>Precio validado</th><th class="hide-sm">Actividad</th></tr></thead>
-                <tbody>
-                  <tr><td class="c">Conductores del Norte</td><td class="hide-sm">2 · conductor y cable de cobre</td><td>MXN</td><td class="hide-md">12 días</td><td class="mono">cot-CN-0904.pdf</td><td><span class="chip coste">recotizando</span></td><td class="hide-sm">Diana · 8 sep</td></tr>
-                  <tr><td class="c">Tuberías del Centro</td><td class="hide-sm">2 · tubo PAD y coples</td><td>MXN</td><td class="hide-md">5 días</td><td class="mono">cot-TC-0828.pdf</td><td><span class="chip ok">validado</span></td><td class="hide-sm">hecha</td></tr>
-                  <tr><td class="c">Prolec</td><td class="hide-sm">1 · transformador 500 kVA</td><td>USD</td><td class="hide-md">8 semanas</td><td class="mono">cot-PR-0901.pdf</td><td><span class="chip validacion">por validar</span></td><td class="hide-sm">Diana · hoy</td></tr>
-                  <tr><td class="c">Cemex</td><td class="hide-sm">1 · concreto f'c 200</td><td>MXN</td><td class="hide-md">2 días</td><td class="mono">lista de precios sep</td><td><span class="chip ok">validado</span></td><td class="hide-sm">hecha</td></tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="tp" data-panel="mano" role="tabpanel" hidden>
-              <div class="toolbar"><span class="mini">Cuadrillas del catálogo · rendimiento por concepto</span><span class="btn-sm primary">Confirmar mano de obra</span></div>
-              <table class="grid">
-                <thead><tr><th>Cuadrilla</th><th class="hide-sm">Concepto</th><th class="n">Jornal</th><th class="n hide-md">Rendimiento</th><th class="n">Costo por unidad</th><th class="n hide-sm">Total</th><th>Estado</th></tr></thead>
-                <tbody>
-                  <tr><td class="c">Cuadrilla eléctrica · oficial + 2 ayudantes</td><td class="hide-sm">Canalización 3T × 160 mm</td><td class="n">$1,722.40</td><td class="n hide-md">12.5 ML/jornal</td><td class="n">$137.79</td><td class="n hide-sm">$2,769.58</td><td><span class="chip ok">confirmado</span></td></tr>
-                  <tr><td class="c">Cuadrilla de obra civil · albañil + 3 peones</td><td class="hide-sm">Registro colado en sitio</td><td class="n">$1,980.00</td><td class="n hide-md">0.6 PZA/jornal</td><td class="n">$184.07</td><td class="n hide-sm">$4,877.86</td><td><span class="chip ok">confirmado</span></td></tr>
-                  <tr><td class="c">Cuadrilla de media tensión · liniero + ayudante</td><td class="hide-sm">Conductor de aluminio XLPE</td><td class="n">$2,120.00</td><td class="n hide-md">17 ML/jornal</td><td class="n">$124.71</td><td class="n hide-sm">$5,961.14</td><td><span class="chip ok">confirmado</span></td></tr>
-                  <tr><td class="c">Maniobra de transformador · 4 personas</td><td class="hide-sm">Transformador tipo pedestal</td><td class="n">$6,400.00</td><td class="n hide-md">1 PZA/jornal</td><td class="n">$6,400.00</td><td class="n hide-sm">$6,400.00</td><td><span class="chip ok">confirmado</span></td></tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="tp" data-panel="maquinaria" role="tabpanel" hidden>
-              <div class="toolbar"><span class="mini">Equipo propio y rentado</span><span class="btn-sm">Agregar equipo</span></div>
-              <table class="grid">
-                <thead><tr><th>Equipo</th><th class="hide-sm">Concepto</th><th>Origen</th><th class="n">Renta por hora</th><th class="n hide-md">Horas</th><th class="n">Total</th></tr></thead>
-                <tbody>
-                  <tr><td class="c">Grúa 30 t</td><td class="hide-sm">Transformador tipo pedestal</td><td>rentada</td><td class="n">$1,050.00</td><td class="n hide-md">4.0</td><td class="n">$4,200.00</td></tr>
-                  <tr><td class="c">Retroexcavadora 416</td><td class="hide-sm">Canalizaciones</td><td>propia</td><td class="n">$0.00</td><td class="n hide-md">16.0</td><td class="n">$0.00</td></tr>
-                  <tr><td class="c">Revolvedora 1 saco</td><td class="hide-sm">Registro colado en sitio</td><td>propia</td><td class="n">$0.00</td><td class="n hide-md">24.0</td><td class="n">$0.00</td></tr>
-                  <tr class="tot"><td class="c">Totales</td><td class="hide-sm"></td><td></td><td class="n"></td><td class="n hide-md">44.0</td><td class="n">$4,200.00</td></tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="tp" data-panel="indirectos" role="tabpanel" hidden>
-              <div class="toolbar"><span class="mini">Se aplican sobre el costo directo de cada línea</span><span class="btn-sm primary">Confirmar indirectos</span></div>
-              <table class="grid">
-                <thead><tr><th>Indirecto</th><th class="hide-sm">Base</th><th class="n">%</th><th class="n">Monto</th><th>Estado</th></tr></thead>
-                <tbody>
-                  <tr><td class="c">Oficina central y administración</td><td class="hide-sm">costo directo</td><td class="n">3.0%</td><td class="n">$11,096.24</td><td><span class="chip ok">confirmado</span></td></tr>
-                  <tr><td class="c">Supervisión y residente de obra</td><td class="hide-sm">costo directo</td><td class="n">2.5%</td><td class="n">$9,246.87</td><td><span class="chip ok">confirmado</span></td></tr>
-                  <tr><td class="c">Fianzas y seguros</td><td class="hide-sm">precio de venta</td><td class="n">1.5%</td><td class="n">$6,931.78</td><td><span class="chip validacion">pendiente</span></td></tr>
-                  <tr><td class="c">Fletes y traslados</td><td class="hide-sm">costo directo</td><td class="n">1.0%</td><td class="n">$3,698.75</td><td><span class="chip coste">depende de proveedor</span></td></tr>
-                  <tr class="tot"><td class="c">Total de indirectos</td><td class="hide-sm"></td><td class="n">8.0%</td><td class="n">$30,973.64</td><td></td></tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="tp" data-panel="actividades" role="tabpanel" hidden>
-              <div class="toolbar"><span class="mini">5 actividades · 2 pendientes · pasar a validación bloqueado</span><span class="btn-sm">Nueva actividad</span></div>
-              <table class="grid">
-                <thead><tr><th>Actividad</th><th>Responsable</th><th class="hide-sm">Fecha límite</th><th>Estado</th><th class="hide-md">Depende de</th></tr></thead>
-                <tbody>
-                  <tr><td class="c">Confirmar insumos</td><td>Diana Compras</td><td class="mono hide-sm">2026-09-02</td><td><span class="chip ok">hecho</span></td><td class="hide-md">–</td></tr>
-                  <tr><td class="c">Confirmar mano de obra</td><td>Beto Obra</td><td class="mono hide-sm">2026-09-03</td><td><span class="chip ok">hecho</span></td><td class="hide-md">–</td></tr>
-                  <tr><td class="c">Pedir cotización a Conductores del Norte</td><td>Diana Compras</td><td class="mono hide-sm">2026-09-08</td><td><span class="chip prog">en curso</span></td><td class="hide-md">–</td></tr>
-                  <tr><td class="c">Confirmar indirectos</td><td>Diana Compras</td><td class="mono hide-sm">2026-09-10</td><td><span class="chip validacion">pendiente</span></td><td class="hide-md">Pedir cotización a Conductores del Norte</td></tr>
-                  <tr><td class="c">Costeo de conceptos <span class="mini">· se llena solo, 224 de 271</span></td><td>Portal</td><td class="mono hide-sm">–</td><td><span class="chip coste">83%</span></td><td class="hide-md">–</td></tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="tp" data-panel="documentos" role="tabpanel" hidden>
-              <div class="toolbar"><span class="mini">Todo lo que ha salido o entrado de esta oportunidad</span><span class="btn-sm">Subir archivo</span></div>
-              <table class="grid">
-                <thead><tr><th>Documento</th><th>Tipo</th><th class="hide-sm">Subió</th><th class="hide-md">Fecha</th><th>Firma</th></tr></thead>
-                <tbody>
-                  <tr><td class="c mono">catalogo_planta_norte.xlsx</td><td>catálogo del cliente</td><td class="hide-sm">Carlos Ventas</td><td class="mono hide-md">2026-08-26</td><td>–</td></tr>
-                  <tr><td class="c mono">OPP-1042-cotizacion-V1.pdf</td><td>cotización</td><td class="hide-sm">Portal</td><td class="mono hide-md">2026-08-28</td><td>–</td></tr>
-                  <tr><td class="c mono">OPP-1042-desglose-V1.pdf</td><td>desglose interno</td><td class="hide-sm">Portal</td><td class="mono hide-md">2026-08-28</td><td>–</td></tr>
-                  <tr><td class="c mono">plano-subestacion-rev2.pdf</td><td>plano</td><td class="hide-sm">Carlos Ventas</td><td class="mono hide-md">2026-09-01</td><td>–</td></tr>
-                  <tr><td class="c mono">OPP-1042-validacion-costeo.pdf</td><td>validación</td><td class="hide-sm">Portal</td><td class="mono hide-md">pendiente</td><td><span class="chip validacion">esperando a dirección</span></td></tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="tp" data-panel="historial" role="tabpanel" hidden>
-              <div class="toolbar"><span class="mini">Cada cambio con autor, valor anterior y nuevo · un administrador puede revertir</span><span class="btn-sm">Deshacer rango</span></div>
-              <table class="grid">
-                <thead><tr><th class="hide-sm">Fecha</th><th>Quién</th><th>Cambio</th><th class="hide-md">Antes</th><th>Después</th></tr></thead>
-                <tbody>
-                  <tr><td class="mono hide-sm">09-04 10:43</td><td>Carlos Ventas <span class="mini">· WhatsApp</span></td><td class="c">Nota agregada</td><td class="hide-md">–</td><td>"Diana confirma indirectos el jueves…"</td></tr>
-                  <tr><td class="mono hide-sm">09-04 09:12</td><td>Diana Compras</td><td class="c">Conductor XLPE · etapa costeo</td><td class="hide-md">confirmado</td><td>en cotización</td></tr>
-                  <tr><td class="mono hide-sm">09-03 16:20</td><td>Beto Obra</td><td class="c">Canalización 3T × 160 · P.U. mano de obra</td><td class="mono hide-md">$142.10</td><td class="mono">$137.79</td></tr>
-                  <tr><td class="mono hide-sm">09-02 11:05</td><td>Rocío Medina</td><td class="c">Transformador 500 kVA · precio de venta</td><td class="mono hide-md">$372,000.00</td><td class="mono">$389,760.00</td></tr>
-                  <tr><td class="mono hide-sm">08-28 18:30</td><td>Portal</td><td class="c">Versión V1 archivada, V2 en borrador</td><td class="hide-md">V1</td><td>V2</td></tr>
-                  <tr><td class="mono hide-sm">08-26 09:00</td><td>Carlos Ventas</td><td class="c">Etapa</td><td class="hide-md">Nueva oportunidad</td><td>En costeo</td></tr>
-                </tbody>
-              </table>
-            </div>
-
-            </div>
-          </div>
-        </div>
-      </div>
-      <figcaption class="fig-cap"><b>Funciona en el celular.</b> Se abre como una app, sin instalar nada. Mismo portal, mismos permisos.</figcaption>
-    </figure>
-    </div>
-  </section>
-
   <!-- ============ SEGURIDAD Y PERMISOS ============ -->
   <section class="block" id="datos">
     <div class="wide">
@@ -1431,14 +1230,14 @@
           <p class="eyebrow">Tu información</p>
           <h2>Cada quien ve solo lo suyo.<br>Y todo queda registrado.</h2>
         </div>
-        <p class="lede">Tus clientes, tus costos y tu utilidad son lo más valioso de tu empresa. Tú decides quién ve qué, y ningún cambio se pierde.</p>
+        <p class="lede">Tú decides quién ve qué, y ningún cambio se pierde.</p>
       </div>
       <div class="trust">
         <ul class="trust-list">
-          <li><i>01</i><div><h3>Cada quien ve lo que le toca</h3><p>Un vendedor ve sus oportunidades y nada más. Compras ve costos, pero no utilidad. Dirección lo ve todo. Si alguien se va, le quitas el acceso y su trabajo se queda contigo.</p></div></li>
-          <li><i>02</i><div><h3>Historial de cada cambio</h3><p>Quién movió un precio, cuándo y cuál era el valor anterior. Un administrador puede revertirlo. No hay "no sé quién cambió el Excel".</p></div></li>
-          <li><i>03</i><div><h3>Tus datos son tuyos</h3><p>Todo se exporta a Excel y PDF cuando quieras, sin pedir permiso. Si un día dejas Tratto, te llevas tu información completa.</p></div></li>
-          <li><i>04</i><div><h3>Seguro y con respaldos</h3><p>Información cifrada, respaldos automáticos y acceso solo con cuenta. Hospedado en Cloudflare, la misma infraestructura que usan bancos y gobiernos.</p></div></li>
+          <li><i>01</i><div><h3>Cada quien ve lo que le toca</h3><p>Ventas ve sus oportunidades, compras ve costos sin utilidad, dirección lo ve todo.</p></div></li>
+          <li><i>02</i><div><h3>Historial de cada cambio</h3><p>Quién cambió qué, cuándo y el valor anterior. Se puede revertir.</p></div></li>
+          <li><i>03</i><div><h3>Tus datos son tuyos</h3><p>Exporta todo a Excel y PDF cuando quieras.</p></div></li>
+          <li><i>04</i><div><h3>Seguro y con respaldos</h3><p>Cifrado, respaldos automáticos y acceso solo con cuenta.</p></div></li>
         </ul>
         <div class="perm" aria-label="Ejemplo de matriz de permisos">
           <h5>Ejemplo · quién ve qué en una oportunidad</h5>
@@ -1446,12 +1245,10 @@
             <thead><tr><th></th><th>Vendedor</th><th>Compras</th><th>Admin.</th><th>Dirección</th></tr></thead>
             <tbody>
               <tr><td>Sus oportunidades</td><td><span class="dot"></span></td><td><span class="dot w"></span></td><td><span class="dot"></span></td><td><span class="dot"></span></td></tr>
-              <tr><td>Oportunidades de otros</td><td><span class="dot no"></span></td><td><span class="dot w"></span></td><td><span class="dot"></span></td><td><span class="dot"></span></td></tr>
               <tr><td>Costo de proveedor</td><td><span class="dot no"></span></td><td><span class="dot"></span></td><td><span class="dot w"></span></td><td><span class="dot"></span></td></tr>
               <tr><td>Utilidad por línea</td><td><span class="dot no"></span></td><td><span class="dot no"></span></td><td><span class="dot w"></span></td><td><span class="dot"></span></td></tr>
               <tr><td>Validar costeo</td><td><span class="dot no"></span></td><td><span class="dot no"></span></td><td><span class="dot no"></span></td><td><span class="dot"></span></td></tr>
               <tr><td>Estado de cuenta</td><td><span class="dot no"></span></td><td><span class="dot no"></span></td><td><span class="dot"></span></td><td><span class="dot"></span></td></tr>
-              <tr><td>Exportar a Excel</td><td><span class="dot no"></span></td><td><span class="dot w"></span></td><td><span class="dot"></span></td><td><span class="dot"></span></td></tr>
             </tbody>
           </table>
           <div class="legend"><span><span class="dot"></span> ve y edita</span><span><span class="dot w"></span> solo ve</span><span><span class="dot no"></span> no ve</span></div>
@@ -1601,21 +1398,6 @@
     document.querySelectorAll('a[data-wa]').forEach(function (a) {
       a.href = a.href.replace(/wa\.me\/\d+/, 'wa.me/' + WA_NUMBER);
     });
-    document.querySelectorAll('.app').forEach(function (app) {
-      var tabs = app.querySelectorAll('.tabs [data-tab]');
-      var panels = app.querySelectorAll('.tp[data-panel]');
-      tabs.forEach(function (t) {
-        t.addEventListener('click', function () {
-          var key = t.getAttribute('data-tab');
-          tabs.forEach(function (x) {
-            var on = x.getAttribute('data-tab') === key;
-            x.classList.toggle('on', on);
-            x.setAttribute('aria-selected', on ? 'true' : 'false');
-          });
-          panels.forEach(function (p) { p.hidden = p.getAttribute('data-panel') !== key; });
-        });
-      });
-    });
     // Demo animada del hero: la conversación se escribe sola y se repite.
     (function () {
       var wa = document.getElementById('hero-demo');
@@ -1665,12 +1447,62 @@
       } else { visible = true; run(); }
     })();
 
+    // Hero: los archivos sueltos vuelan uno por uno a su fila del expediente, y se repite.
+    (function () {
+      var fig = document.querySelector('.hero-ba');
+      if (!fig || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+      var ba = fig.querySelector('.ba');
+      var files = Array.prototype.slice.call(fig.querySelectorAll('.file'));
+      var rows = Array.prototype.slice.call(fig.querySelectorAll('.opp-r'));
+      var head = fig.querySelector('.opp-h'), foot = fig.querySelector('.opp-f');
+      var map = [0, 1, 1, 2, 3, 4, 5]; // archivo -> fila (los dos de cotización caen en la misma)
+      var timers = [], visible = false, running = false;
+      ba.classList.add('play');
+      function at(ms, fn) { timers.push(setTimeout(fn, ms)); }
+      function reset() {
+        timers.forEach(clearTimeout); timers = [];
+        ba.classList.add('snap');
+        files.forEach(function (f) { f.classList.remove('fly'); f.style.removeProperty('--dx'); f.style.removeProperty('--dy'); });
+        rows.forEach(function (r) { r.classList.remove('show', 'hit'); });
+        head.classList.remove('show'); foot.classList.remove('show');
+        ba.classList.remove('done', 'flying');
+        void ba.offsetWidth;
+        ba.classList.remove('snap');
+      }
+      function fly(i) {
+        var f = files[i], r = rows[map[i]];
+        var a = f.getBoundingClientRect(), b = r.getBoundingClientRect();
+        f.style.setProperty('--dx', ((b.left + b.width * 0.4) - (a.left + a.width / 2)) + 'px');
+        f.style.setProperty('--dy', ((b.top + b.height / 2) - (a.top + a.height / 2)) + 'px');
+        f.classList.add('fly');
+        at(520, function () {
+          r.classList.add('show', 'hit');
+          at(700, function () { r.classList.remove('hit'); });
+        });
+      }
+      function run() {
+        reset(); running = true;
+        at(400, function () { head.classList.add('show'); });
+        at(900, function () { ba.classList.add('flying'); });
+        files.forEach(function (_, i) { at(1000 + i * 620, function () { fly(i); }); });
+        var end = 1000 + files.length * 620 + 300;
+        at(end, function () { ba.classList.remove('flying'); foot.classList.add('show'); ba.classList.add('done'); });
+        at(end + 5000, function () { running = false; if (visible) run(); });
+      }
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (es) { visible = es[0].isIntersecting; if (visible && !running) run(); }, { threshold: 0.5 }).observe(fig);
+      } else { visible = true; run(); }
+    })();
+
     // Mini escenas por etapa: [data-t] aparece, [data-hide] desaparece, se repite cada data-loop ms.
     document.querySelectorAll('.mini[data-loop]').forEach(function (m) {
       if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       var loop = +m.getAttribute('data-loop'), els = m.querySelectorAll('[data-t],[data-hide]');
       var timers = [], visible = false, running = false;
+      var inPanel = !!m.closest('.stage-panel');
+      function active() { return !inPanel || m.classList.contains('on'); }
       m.classList.add('play');
+      m.addEventListener('restart', function () { if (visible) run(); });
       function reset() { timers.forEach(clearTimeout); timers = []; els.forEach(function (e) { e.classList.remove('show', 'gone'); }); }
       function run() {
         reset(); running = true;
@@ -1679,26 +1511,67 @@
           if (t !== null) timers.push(setTimeout(function () { e.classList.add('show'); }, +t));
           if (h !== null) timers.push(setTimeout(function () { e.classList.add('gone'); }, +h));
         });
-        timers.push(setTimeout(function () { running = false; if (visible) run(); }, loop));
+        timers.push(setTimeout(function () { running = false; if (visible && active()) run(); }, loop));
       }
       if ('IntersectionObserver' in window) {
-        new IntersectionObserver(function (es) { visible = es[0].isIntersecting; if (visible && !running) run(); }, { threshold: 0.5 }).observe(m);
+        new IntersectionObserver(function (es) { visible = es[0].isIntersecting; if (visible && !running && active()) run(); }, { threshold: 0.3 }).observe(m);
       } else { visible = true; run(); }
     });
 
-    var segs = document.querySelectorAll('.seg [data-mock]');
-    var apps = document.querySelectorAll('.app[data-app]');
-    segs.forEach(function (b) {
-      b.addEventListener('click', function () {
-        var key = b.getAttribute('data-mock');
-        segs.forEach(function (x) {
-          var on = x.getAttribute('data-mock') === key;
-          x.classList.toggle('on', on);
-          x.setAttribute('aria-selected', on ? 'true' : 'false');
+    // El problema: escenario con pestañas; avanza solo cada 5 s mientras está a la vista, se pausa al pasar el mouse.
+    (function () {
+      var root = document.getElementById('swap'); if (!root) return;
+      var tabs = root.querySelectorAll('.swap-tabs [data-i]'), panes = root.querySelectorAll('.swap-pane');
+      var MS = 5000, cur = 0, timer = null, visible = false, hover = false;
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      root.style.setProperty('--swap-ms', MS + 'ms');
+      function show(k) {
+        cur = (k + panes.length) % panes.length;
+        tabs.forEach(function (t, i) { var on = i === cur; t.classList.toggle('on', on); t.setAttribute('aria-selected', on ? 'true' : 'false'); if (on) { var bar = t.querySelector('.bar'); bar.style.transition = 'none'; bar.style.width = '0'; void bar.offsetWidth; bar.style.transition = ''; bar.style.width = ''; } });
+        panes.forEach(function (p, i) { p.classList.toggle('on', i === cur); });
+        schedule();
+      }
+      function schedule() {
+        clearTimeout(timer);
+        if (visible && !hover && !reduce) timer = setTimeout(function () { show(cur + 1); }, MS);
+      }
+      tabs.forEach(function (t, i) { t.addEventListener('click', function () { show(i); }); });
+      root.addEventListener('mouseenter', function () { hover = true; root.classList.add('paused'); clearTimeout(timer); });
+      root.addEventListener('mouseleave', function () { hover = false; root.classList.remove('paused'); show(cur); });
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (es) { visible = es[0].isIntersecting; if (visible) show(cur); else clearTimeout(timer); }, { threshold: 0.35 }).observe(root);
+      } else { visible = true; schedule(); }
+    })();
+
+    // Cómo funciona: panel fijo; la escena cambia según la etapa que está frente al lector.
+    (function () {
+      var items = document.querySelectorAll('.stages > li[data-stage]');
+      var scenes = document.querySelectorAll('.stage-panel .mini[data-scene]');
+      if (!items.length || !('IntersectionObserver' in window)) return;
+      var current = 0;
+      function activate(k) {
+        if (k === current) return; current = k;
+        items.forEach(function (li) { li.classList.toggle('on', +li.getAttribute('data-stage') === k); });
+        scenes.forEach(function (sc) {
+          var on = +sc.getAttribute('data-scene') === k;
+          sc.classList.toggle('on', on);
+          if (on) sc.dispatchEvent(new Event('restart'));
         });
-        apps.forEach(function (a) { a.hidden = a.getAttribute('data-app') !== key; });
-      });
-    });
+      }
+      var narrow = window.matchMedia('(max-width: 900px)');
+      function margin() { return narrow.matches ? '-40% 0px -35% 0px' : '-45% 0px -45% 0px'; }
+      var io;
+      function observe() {
+        if (io) io.disconnect();
+        io = new IntersectionObserver(function (es) {
+          es.forEach(function (e) { if (e.isIntersecting) activate(+e.target.getAttribute('data-stage')); });
+        }, { rootMargin: margin(), threshold: 0 });
+        items.forEach(function (li) { io.observe(li); });
+      }
+      observe();
+      narrow.addEventListener ? narrow.addEventListener('change', observe) : narrow.addListener(observe);
+    })();
+
   })();
 </script>
 </body>
