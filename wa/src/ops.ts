@@ -89,6 +89,59 @@ export async function sendHuman(
   return ok({ ok: true, relevo_humano_hasta_en_horas: hours });
 }
 
+/**
+ * Lo que un PORTAL manda por su cuenta (p. ej. "te llegó una cotización para
+ * verificar"). A diferencia de sendHuman NO toma el hilo: es el agente de ese
+ * cliente hablando, no una persona. Solo a números que le pertenecen al tenant
+ * —por directorio o por hilo pegajoso— y solo dentro de la ventana de 24 h:
+ * fuera de ella WhatsApp exige plantilla y esta cuenta no tiene ninguna.
+ */
+export async function sendPortal(
+  env: Env, args: { tenant: string; phone: string; text: string },
+): Promise<Result> {
+  const p10 = phone10(args.phone ?? '');
+  const text = (args.text ?? '').trim();
+  const tenant = (args.tenant ?? '').trim();
+  if (!tenant) return fail(400, 'tenant requerido');
+  if (p10.length !== 10) return fail(400, 'teléfono inválido');
+  if (!text) return fail(400, 'texto vacío');
+
+  const t = await env.DB.prepare(`SELECT active FROM tenants WHERE slug = ?`).bind(tenant).first<{ active: number }>();
+  if (!t || !t.active) return fail(403, 'tenant desconocido o inactivo');
+
+  const th = await env.DB.prepare(
+    `SELECT wa_from, tenant_slug, last_seen > datetime('now','-24 hours') AS abierto FROM threads WHERE phone10 = ?`,
+  ).bind(p10).first<{ wa_from: string; tenant_slug: string | null; abierto: number }>();
+  if (!th) {
+    return fail(404, 'ese número nunca ha escrito',
+      'WhatsApp solo deja escribirle a quien nos escribió primero (y hace menos de 24 h). ' +
+      'Pídele que mande cualquier mensaje al número de Tratto.');
+  }
+
+  // El número tiene que ser de ESE cliente: por directorio, o porque su hilo ya
+  // quedó ruteado ahí. Un portal jamás le escribe a la gente de otro.
+  const dir = await env.DB.prepare(`SELECT tenant_slug FROM directory WHERE phone10 = ?`)
+    .bind(p10).first<{ tenant_slug: string }>();
+  const suyo = dir ? dir.tenant_slug === tenant : th.tenant_slug === tenant;
+  if (!suyo) return fail(403, 'ese número no pertenece a este cliente');
+
+  if (!th.abierto) {
+    return fail(409, 'ventana de 24 h cerrada',
+      'La persona no escribe desde hace más de 24 h. WhatsApp solo permite plantillas ' +
+      'aprobadas fuera de esa ventana, y esta cuenta no tiene ninguna.');
+  }
+
+  try {
+    await sendText(env, th.wa_from, text);
+  } catch (err) {
+    return fail(502, 'WhatsApp rechazó el envío', String(err));
+  }
+  await logOutbound(env, {
+    phone10: p10, to: th.wa_from, tenantSlug: tenant, body: text, author: 'portal', sentBy: tenant,
+  });
+  return ok({ ok: true });
+}
+
 /** Tomar (hours > 0) o soltar (hours 0) el hilo sin escribir nada. */
 export async function handoff(
   env: Env, args: { phone: string; hours?: number | null; by: string },

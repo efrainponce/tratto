@@ -104,6 +104,28 @@ Para conectar Janing: implementar `POST /api/wa/inbound` en `janing-portal`
 (resolver la persona por `phone`, correr su agente contra su D1, devolver `reply`) y
 luego apuntar el tenant a esa URL.
 
+### Portal → persona (`POST /portal/send`)
+
+El camino de regreso cuando el portal quiere escribir **por su cuenta**, sin que la
+persona haya preguntado nada (p. ej. "se generó una cotización, verifícala"). Mismo
+secreto, misma firma, sentido contrario:
+
+```jsonc
+// POST https://wa.usetratto.com/portal/send
+// headers: x-tratto-signature: sha256=<HMAC-SHA256 del cuerpo con GATEWAY_SECRET>
+{ "tenant": "janing", "phone": "5215554369433", "text": "…" }
+```
+
+Responde `200 {"ok":true}` o un error con `{error, detalle?}`: `401` firma mala,
+`403` el número no es de ese cliente (ni en `directory` ni con hilo ruteado ahí),
+`404` ese número nunca ha escrito, `409` **ventana de 24 h cerrada**, `502` Meta
+rechazó el envío. Solo texto (sin archivos todavía). **No** toma el hilo como relevo
+humano: es el agente del cliente hablando, y queda en `messages` con `author=portal`.
+
+La regla de las 24 h es de WhatsApp, no nuestra: sin plantilla aprobada solo se
+puede escribir a quien nos escribió hace menos de 24 h. Si el portal necesita avisar
+"en frío", la persona tiene que mandar cualquier mensaje al número de Tratto primero.
+
 ### Fotos, documentos, audios y videos
 
 Meta no manda el archivo en el webhook, manda un `media_id` cuya URL caduca en
@@ -132,9 +154,10 @@ el mensaje llega así (`text` lleva el caption, si lo hubo):
   (por `kind` el portal sabe que había algo), queda `dispatch=error:media …` y llega
   aviso por correo. Nunca se deja a la persona sin respuesta por eso.
 - Límites de WhatsApp: imagen 5 MB, audio/video 16 MB, documento 100 MB.
-- Mandar archivos **de regreso** (portal → persona) no existe todavía. Cuando haga
-  falta, el contrato es el mismo al revés: `{"reply": "…", "media": {"url", "mime",
-  "filename", "caption"}}` y el gateway lo sube a Meta.
+- Mandar archivos **de regreso** (portal → persona) no existe todavía (texto sí:
+  `/portal/send`, arriba). Cuando haga falta, el contrato es el mismo al revés:
+  `{"reply": "…", "media": {"url", "mime", "filename", "caption"}}` y el gateway lo
+  sube a Meta.
 
 Una vez (bucket + retención):
 

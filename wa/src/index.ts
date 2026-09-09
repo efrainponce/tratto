@@ -14,6 +14,7 @@ import {
   type Incoming,
 } from './routing';
 import { adminRoutes } from './admin';
+import { sendPortal } from './ops';
 import { notify, type NotifyReason } from './notify';
 import { inboxRoutes } from './inbox';
 import { MEDIA_KINDS, serve as serveMedia, storeInbound, verifySignature, type MediaRef } from './media';
@@ -232,6 +233,24 @@ export default {
         return new Response('forbidden', { status: 403 });
       }
       return serveMedia(env, key);
+    }
+
+    // Salida de un portal: {tenant, phone, text} firmado con GATEWAY_SECRET —
+    // el mismo secreto con el que firmamos lo que les mandamos, en sentido
+    // contrario. No toma el hilo (es el agente del cliente, no una persona);
+    // ver ops.sendPortal para los candados (tenant, pertenencia, 24 h).
+    if (req.method === 'POST' && url.pathname === '/portal/send') {
+      if (!env.GATEWAY_SECRET) return Response.json({ error: 'GATEWAY_SECRET sin configurar' }, { status: 500 });
+      const raw = await req.text();
+      const header = req.headers.get('x-tratto-signature') ?? '';
+      const expected = await hmacHex(env.GATEWAY_SECRET, raw);
+      if (!header.startsWith('sha256=') || !timingSafeEqual(expected, header.slice('sha256='.length).toLowerCase())) {
+        return Response.json({ error: 'firma inválida' }, { status: 401 });
+      }
+      let b: { tenant?: string; phone?: string; text?: string };
+      try { b = JSON.parse(raw); } catch { return Response.json({ error: 'cuerpo no es JSON' }, { status: 400 }); }
+      const r = await sendPortal(env, { tenant: b.tenant ?? '', phone: b.phone ?? '', text: b.text ?? '' });
+      return Response.json(r.body, { status: r.status });
     }
 
     if (url.pathname.startsWith('/admin/')) return adminRoutes(req, env, url);
