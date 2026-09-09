@@ -2,7 +2,7 @@
 // ADMIN_TOKEN) y por la bandeja (/inbox/api/*, sesión de usuario). Una sola
 // implementación para que las dos puertas hagan exactamente lo mismo.
 import type { Env } from './env';
-import { phone10, sendTemplate, sendText, type Plantilla } from './wa';
+import { phone10, sendDocument, sendTemplate, sendText, uploadMedia, type Archivo, type Plantilla } from './wa';
 import { logOutbound } from './routing';
 
 export interface Result { status: number; body: Record<string, unknown> | unknown[] }
@@ -101,7 +101,7 @@ export async function sendHuman(
  * plantilla, por eso el texto va primero cuando se puede.
  */
 export async function sendPortal(
-  env: Env, args: { tenant: string; phone: string; text: string; template?: Plantilla | null },
+  env: Env, args: { tenant: string; phone: string; text: string; template?: Plantilla | null; archivo?: Archivo | null },
 ): Promise<Result> {
   const p10 = phone10(args.phone ?? '');
   const text = (args.text ?? '').trim();
@@ -139,10 +139,21 @@ export async function sendPortal(
   // Sin hilo (nunca escribió) el destino se arma con la lada de México: el
   // directorio guarda 10 dígitos y hoy todos los teléfonos son mexicanos.
   const to = th?.wa_from ?? `52${p10}`;
-  let modo: 'texto' | 'plantilla' = abierto ? 'texto' : 'plantilla';
+  const modo: 'texto' | 'plantilla' = abierto ? 'texto' : 'plantilla';
+  // Con archivo: dentro de la ventana va como UN mensaje de documento con el
+  // texto de pie; fuera, en el encabezado de la plantilla si ella lo tiene
+  // (si no, va solo el texto y se avisa con `archivo: 'omitido'`).
+  const archivo = args.archivo && args.archivo.bytes.byteLength > 0 ? args.archivo : null;
+  const cabeArchivo = !!archivo && (modo === 'texto' || tpl?.header === 'document');
+  let conArchivo: 'enviado' | 'omitido' | null = archivo ? (cabeArchivo ? 'enviado' : 'omitido') : null;
   try {
-    if (modo === 'texto') await sendText(env, to, text);
-    else await sendTemplate(env, to, tpl!);
+    const mediaId = cabeArchivo ? await uploadMedia(env, archivo!) : null;
+    if (modo === 'texto') {
+      if (mediaId) await sendDocument(env, to, mediaId, archivo!.filename, text);
+      else await sendText(env, to, text);
+    } else {
+      await sendTemplate(env, to, tpl!, mediaId ? { mediaId, filename: archivo!.filename } : null);
+    }
   } catch (err) {
     return fail(502, modo === 'texto' ? 'WhatsApp rechazó el envío' : `WhatsApp rechazó la plantilla ${tpl!.name}`, String(err));
   }
@@ -153,9 +164,9 @@ export async function sendPortal(
   }
   await logOutbound(env, {
     phone10: p10, to, tenantSlug: tenant, author: 'portal', sentBy: tenant,
-    body: modo === 'texto' ? text : `[plantilla ${tpl!.name}] ${text}`,
+    body: `${modo === 'texto' ? '' : `[plantilla ${tpl!.name}] `}${conArchivo === 'enviado' ? `[${archivo!.filename}] ` : ''}${text}`,
   });
-  return ok({ ok: true, modo });
+  return ok({ ok: true, modo, archivo: conArchivo });
 }
 
 /** Tomar (hours > 0) o soltar (hours 0) el hilo sin escribir nada. */

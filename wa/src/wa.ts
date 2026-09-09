@@ -46,7 +46,45 @@ export async function sendText(env: Env, to: string, body: string): Promise<void
  * la ventana de 24 h. `body` son los {{n}} del cuerpo en orden; `urlSuffix` el
  * {{1}} del botón de URL (si la plantilla lo tiene). Meta cobra estos mensajes.
  */
-export interface Plantilla { name: string; language?: string; body?: string[]; urlSuffix?: string | null }
+export interface Plantilla {
+  name: string; language?: string; body?: string[]; urlSuffix?: string | null;
+  /** 'document' si la plantilla tiene encabezado de documento: el archivo del
+   *  envío va ahí (subido antes a Meta). Sin esto, el archivo no cabe en la
+   *  plantilla y se manda solo el texto. */
+  header?: 'document' | null;
+}
+
+/** Un archivo para mandar: los bytes se suben a Meta (`/media`) y el id
+ *  resultante vale unos 30 días. Límite de WhatsApp para documentos: 100 MB. */
+export interface Archivo { bytes: ArrayBuffer; mime: string; filename: string }
+
+export async function uploadMedia(env: Env, a: Archivo): Promise<string> {
+  if (!env.WHATSAPP_TOKEN || !env.WHATSAPP_PHONE_NUMBER_ID) {
+    throw new Error('WHATSAPP_TOKEN / WHATSAPP_PHONE_NUMBER_ID sin configurar');
+  }
+  const form = new FormData();
+  form.set('messaging_product', 'whatsapp');
+  form.set('type', a.mime);
+  form.set('file', new File([a.bytes], a.filename, { type: a.mime }));
+  const res = await fetch(`${GRAPH}/${env.WHATSAPP_PHONE_NUMBER_ID}/media`, {
+    method: 'POST', headers: { Authorization: `Bearer ${env.WHATSAPP_TOKEN}` }, body: form,
+  });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '');
+    throw new Error(`WhatsApp media upload falló (${res.status}): ${detail.slice(0, 300)}`);
+  }
+  const j = await res.json<{ id?: string }>();
+  if (!j.id) throw new Error('WhatsApp media upload no devolvió id');
+  return j.id;
+}
+
+/** Documento con pie de texto (caption, máx. 1024 caracteres). */
+export async function sendDocument(env: Env, to: string, mediaId: string, filename: string, caption: string): Promise<void> {
+  await graphPost(env, {
+    to: normalizeMxTo(to), type: 'document',
+    document: { id: mediaId, filename, caption: caption.slice(0, 1024) },
+  });
+}
 
 // Los parámetros de plantilla no admiten saltos de línea, tabs ni más de 4
 // espacios seguidos (error 132018): se aplanan aquí para que ningún portal
@@ -55,8 +93,11 @@ function paramLimpio(v: string): string {
   return v.replace(/[\r\n\t]+/g, ' ').replace(/ {2,}/g, ' ').trim().slice(0, 1000) || '-';
 }
 
-export async function sendTemplate(env: Env, to: string, t: Plantilla): Promise<void> {
+export async function sendTemplate(env: Env, to: string, t: Plantilla, headerDoc?: { mediaId: string; filename: string } | null): Promise<void> {
   const components: unknown[] = [];
+  if (t.header === 'document' && headerDoc) {
+    components.push({ type: 'header', parameters: [{ type: 'document', document: { id: headerDoc.mediaId, filename: headerDoc.filename } }] });
+  }
   if (t.body?.length) {
     components.push({ type: 'body', parameters: t.body.map(v => ({ type: 'text', text: paramLimpio(String(v)) })) });
   }

@@ -116,12 +116,20 @@ secreto, misma firma, sentido contrario:
 {
   "tenant": "janing", "phone": "5215554369433", "text": "…",
   // opcional: plantilla aprobada por Meta, para cuando la ventana de 24 h está cerrada
-  "template": { "name": "cotizacion_verificar", "language": "es_MX",
-                "body": ["Elías", "OPP-0010", "Nave industrial"], "urlSuffix": "10" }
+  "template": { "name": "cotizacion_verificar_pdf", "language": "es_MX", "header": "document",
+                "body": ["Elías", "OPP-0010", "Nave industrial"], "urlSuffix": "10" },
+  // opcional: un archivo (base64 dentro del JSON, así la firma lo cubre; máx. 20 MB)
+  "media": { "filename": "Cotizacion-OPP-0010.pdf", "mime": "application/pdf", "base64": "JVBERi0…" }
 }
 ```
 
-Responde `200 {"ok":true, "modo":"texto"|"plantilla"}` o un error con
+**Con archivo.** Dentro de la ventana va como UN mensaje de documento con `text` de
+pie (caption). Fuera de ella, en el encabezado de la plantilla si ésta lo declara
+(`"header": "document"`, la plantilla tiene que haberse creado con `HEADER DOCUMENT`);
+si la plantilla no tiene encabezado, sale solo el texto y la respuesta lo dice con
+`"archivo": "omitido"`. Los bytes se suben a Meta (`/media`) en cada envío.
+
+Responde `200 {"ok":true, "modo":"texto"|"plantilla", "archivo": "enviado"|"omitido"|null}` o un error con
 `{error, detalle?}`: `401` firma mala, `403` el número no es de ese cliente (ni en
 `directory` ni con hilo ruteado ahí), `404` nunca ha escrito y no hay plantilla,
 `409` **ventana de 24 h cerrada** y no hay plantilla, `502` Meta rechazó el envío (o
@@ -146,6 +154,15 @@ aprobarse en minutos u horas; se consultan con `GET
 |---|---|---|
 | `cotizacion_verificar` | Hola {{1}}, se generó la cotización {{2}} ({{3}}) en el portal de Janing y necesita tu verificación. | `https://janing.usetratto.com/oportunidades/{{1}}` |
 | `mencion_actualizacion` | Tienes una mención de {{1}} en {{2}} (portal de Janing): "{{3}}". Ábrela para responder. | `https://janing.usetratto.com/{{1}}` |
+| `cotizacion_verificar_pdf` | **HEADER DOCUMENT** + Hola {{1}}, se generó la cotización {{2}} ({{3}}) … Va el PDF adjunto. | `https://janing.usetratto.com/oportunidades/{{1}}` |
+| `costeo_validar` | Hola {{1}}, el costeo de la cotización {{2}} ({{3}}) está listo y espera tu validación… | `https://janing.usetratto.com/validacion/{{1}}` |
+| `actividades_vencidas` | Hola {{1}}, tienes {{2}} actividad(es) vencida(s)… La más antigua: {{3}}. Ábrelas… | `https://janing.usetratto.com/inicio` |
+
+Una plantilla con encabezado de documento necesita un `header_handle` de ejemplo:
+se sube un PDF con la Resumable Upload API (`POST /{APP_ID}/uploads?file_name=…&
+file_length=…&file_type=application/pdf` → `POST /{upload_id}` con `file_offset: 0`
+y los bytes → `{h}`), y ese `h` va en `example.header_handle`. El cuerpo no puede
+empezar ni terminar con una variable (ni con `{{n}}.`): Meta lo rechaza.
 
 ### Fotos, documentos, audios y videos
 

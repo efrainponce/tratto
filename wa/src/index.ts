@@ -247,9 +247,21 @@ export default {
       if (!header.startsWith('sha256=') || !timingSafeEqual(expected, header.slice('sha256='.length).toLowerCase())) {
         return Response.json({ error: 'firma inválida' }, { status: 401 });
       }
-      let b: { tenant?: string; phone?: string; text?: string; template?: Plantilla | null };
+      let b: { tenant?: string; phone?: string; text?: string; template?: Plantilla | null; media?: { filename?: string; mime?: string; base64?: string } | null };
       try { b = JSON.parse(raw); } catch { return Response.json({ error: 'cuerpo no es JSON' }, { status: 400 }); }
-      const r = await sendPortal(env, { tenant: b.tenant ?? '', phone: b.phone ?? '', text: b.text ?? '', template: b.template ?? null });
+      // El archivo viene en base64 dentro del JSON (así la firma lo cubre igual
+      // que al texto). Tope 20 MB decodificado — un PDF de cotización pesa KB.
+      let archivo: { bytes: ArrayBuffer; mime: string; filename: string } | null = null;
+      if (b.media?.base64) {
+        if (b.media.base64.length > 28_000_000) return Response.json({ error: 'archivo demasiado grande (máx. 20 MB)' }, { status: 413 });
+        try {
+          const bin = atob(b.media.base64);
+          const bytes = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+          archivo = { bytes: bytes.buffer, mime: b.media.mime || 'application/octet-stream', filename: b.media.filename || 'archivo' };
+        } catch { return Response.json({ error: 'media.base64 inválido' }, { status: 400 }); }
+      }
+      const r = await sendPortal(env, { tenant: b.tenant ?? '', phone: b.phone ?? '', text: b.text ?? '', template: b.template ?? null, archivo });
       return Response.json(r.body, { status: r.status });
     }
 
