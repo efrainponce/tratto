@@ -180,7 +180,16 @@ export async function alreadyProcessed(env: Env, waId: string): Promise<boolean>
   return (res.meta?.changes ?? 0) === 0;
 }
 
-export interface DispatchResult { status: string; reply: string | null }
+/** Un envío que el portal nos pide hacer por él (mismo contrato que
+ *  /portal/send, con el archivo en base64). Se ejecuta en index.ts después
+ *  de contestar: el portal no puede llamarnos de regreso desde un request
+ *  que le llegó por service binding (recursión → 522). */
+export interface EnvioPortal {
+  phone: string; text: string;
+  template?: { name: string; language?: string; body?: string[]; urlSuffix?: string | null; header?: 'document' | null; urlIndex?: number } | null;
+  media?: { filename?: string; mime?: string; base64?: string } | null;
+}
+export interface DispatchResult { status: string; reply: string | null; sends: EnvioPortal[] }
 
 /**
  * Reenvía el mensaje al portal del cliente y devuelve lo que ese portal quiera
@@ -192,9 +201,9 @@ export async function dispatchToTenant(
   env: Env, msg: Incoming, r: Resolution,
 ): Promise<DispatchResult> {
   const tenant = r.tenant;
-  if (!tenant) return { status: 'lead', reply: null };
+  if (!tenant) return { status: 'lead', reply: null, sends: [] };
   if (!tenant.inbound_url) {
-    return { status: 'no_handler', reply: tenant.ack_text };
+    return { status: 'no_handler', reply: tenant.ack_text, sends: [] };
   }
 
   // `media` va null en texto, y también si Meta no nos dejó bajar el archivo: el
@@ -241,6 +250,7 @@ export async function dispatchToTenant(
     const detail = await res.text().catch(() => '');
     throw new Error(`portal ${tenant.slug} respondió ${res.status}: ${detail.slice(0, 200)}`);
   }
-  const body = await res.json<{ reply?: string }>().catch(() => ({} as { reply?: string }));
-  return { status: 'ok', reply: body.reply ?? null };
+  type Cuerpo = { reply?: string; sends?: EnvioPortal[] };
+  const body = await res.json<Cuerpo>().catch(() => ({} as Cuerpo));
+  return { status: 'ok', reply: body.reply ?? null, sends: Array.isArray(body.sends) ? body.sends : [] };
 }

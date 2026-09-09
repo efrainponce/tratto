@@ -11,10 +11,10 @@ import { hmacHex, timingSafeEqual } from './crypto';
 import { sendText, markRead, type Plantilla } from './wa';
 import {
   alreadyProcessed, dispatchToTenant, logMessage, logOutbound, resolve, touchThread,
-  type Incoming,
+  type DispatchResult, type Incoming,
 } from './routing';
 import { adminRoutes } from './admin';
-import { sendPortal } from './ops';
+import { archivoDe, sendPortal } from './ops';
 import { notify, type NotifyReason } from './notify';
 import { inboxRoutes } from './inbox';
 import { MEDIA_KINDS, serve as serveMedia, storeInbound, verifySignature, type MediaRef } from './media';
@@ -120,6 +120,7 @@ async function processMessage(env: Env, msg: Incoming): Promise<void> {
   let reply: string | null = r.tenant ? null : LEAD_REPLY;
   let author = 'ack';
   let detail: string | undefined;
+  let sends: DispatchResult['sends'] = [];
 
   // El archivo se baja ANTES de despachar: la URL firmada que va en el payload tiene
   // que apuntar a algo que ya existe. Si Meta falla, el mensaje sigue su curso sin
@@ -146,6 +147,7 @@ async function processMessage(env: Env, msg: Incoming): Promise<void> {
       const d = await dispatchToTenant(env, msg, r);
       status = d.status;
       reply = d.reply;
+      sends = d.sends;
       author = d.status === 'ok' ? 'agent' : 'ack';
     } catch (err) {
       // El mensaje YA quedó en `messages`; el portal se cayó, no nosotros.
@@ -174,6 +176,17 @@ async function processMessage(env: Env, msg: Incoming): Promise<void> {
     } catch (err) {
       console.error('send', err);
       detail = detail ?? String(err).slice(0, 300);
+    }
+  }
+
+  // Lo que el portal nos pidió mandar por él (p. ej. el PDF firmado tras un
+  // GO), DESPUÉS de su respuesta y con los mismos candados que /portal/send.
+  for (const s of sends) {
+    try {
+      const out = await sendPortal(env, { tenant: r.tenant!.slug, phone: s.phone, text: s.text, template: s.template ?? null, archivo: archivoDe(s.media) });
+      if (out.status !== 200) console.error('send diferido', r.tenant!.slug, s.phone, out.body);
+    } catch (err) {
+      console.error('send diferido', r.tenant!.slug, s.phone, err);
     }
   }
 
@@ -261,14 +274,8 @@ export default {
       // El archivo viene en base64 dentro del JSON (así la firma lo cubre igual
       // que al texto). Tope 20 MB decodificado — un PDF de cotización pesa KB.
       let archivo: { bytes: ArrayBuffer; mime: string; filename: string } | null = null;
-      if (b.media?.base64) {
-        if (b.media.base64.length > 28_000_000) return Response.json({ error: 'archivo demasiado grande (máx. 20 MB)' }, { status: 413 });
-        try {
-          const bin = atob(b.media.base64);
-          const bytes = new Uint8Array(bin.length);
-          for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-          archivo = { bytes: bytes.buffer, mime: b.media.mime || 'application/octet-stream', filename: b.media.filename || 'archivo' };
-        } catch { return Response.json({ error: 'media.base64 inválido' }, { status: 400 }); }
+      try { archivo = archivoDe(b.media); } catch (err) {
+        return Response.json({ error: String(err).includes('grande') ? 'archivo demasiado grande (máx. 20 MB)' : 'media.base64 inválido' }, { status: String(err).includes('grande') ? 413 : 400 });
       }
       const r = await sendPortal(env, { tenant: b.tenant ?? '', phone: b.phone ?? '', text: b.text ?? '', template: b.template ?? null, archivo });
       return Response.json(r.body, { status: r.status });

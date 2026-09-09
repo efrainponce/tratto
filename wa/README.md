@@ -94,7 +94,12 @@ Cuando `tenants.inbound_url` está puesto, el gateway hace `POST` ahí:
 }
 ```
 
-El portal responde `200` con `{"reply": "texto"}` (o `{}` para no contestar). El
+El portal responde `200` con `{"reply": "texto"}` (o `{}` para no contestar), y
+opcionalmente `"sends": [{phone, text, template?, media?}]` — envíos que el gateway
+ejecuta por él después de contestar, con el mismo contrato y candados que
+`/portal/send`. Es la única forma de mandar algo que nace de un mensaje entrante:
+un portal despachado por service binding **no puede llamarnos de regreso** en el
+mismo request (Cloudflare lo detecta como recursión y responde 522). El
 portal **debe** validar `x-tratto-signature` con el mismo `GATEWAY_SECRET`: es su
 única prueba de que el mensaje viene de aquí. Si el portal falla o tarda, el mensaje
 ya quedó guardado en `messages` con `dispatch=error:…` y la persona recibe un aviso

@@ -220,3 +220,14 @@ export async function listTenants(env: Env): Promise<Result> {
 export function toResponse(r: Result): Response {
   return Response.json(r.body, { status: r.status });
 }
+
+/** El archivo de un envío tal como viene en JSON (base64) → bytes. Tope 20 MB
+ *  decodificado; `null` si no hay archivo o no se pudo leer. */
+export function archivoDe(media: { filename?: string; mime?: string; base64?: string } | null | undefined): Archivo | null {
+  if (!media?.base64) return null;
+  if (media.base64.length > 28_000_000) throw new Error('archivo demasiado grande (máx. 20 MB)');
+  const bin = atob(media.base64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return { bytes: bytes.buffer, mime: media.mime || 'application/octet-stream', filename: media.filename || 'archivo' };
+}
