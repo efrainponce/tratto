@@ -113,18 +113,39 @@ secreto, misma firma, sentido contrario:
 ```jsonc
 // POST https://wa.usetratto.com/portal/send
 // headers: x-tratto-signature: sha256=<HMAC-SHA256 del cuerpo con GATEWAY_SECRET>
-{ "tenant": "janing", "phone": "5215554369433", "text": "…" }
+{
+  "tenant": "janing", "phone": "5215554369433", "text": "…",
+  // opcional: plantilla aprobada por Meta, para cuando la ventana de 24 h está cerrada
+  "template": { "name": "cotizacion_verificar", "language": "es_MX",
+                "body": ["Elías", "OPP-0010", "Nave industrial"], "urlSuffix": "10" }
+}
 ```
 
-Responde `200 {"ok":true}` o un error con `{error, detalle?}`: `401` firma mala,
-`403` el número no es de ese cliente (ni en `directory` ni con hilo ruteado ahí),
-`404` ese número nunca ha escrito, `409` **ventana de 24 h cerrada**, `502` Meta
-rechazó el envío. Solo texto (sin archivos todavía). **No** toma el hilo como relevo
-humano: es el agente del cliente hablando, y queda en `messages` con `author=portal`.
+Responde `200 {"ok":true, "modo":"texto"|"plantilla"}` o un error con
+`{error, detalle?}`: `401` firma mala, `403` el número no es de ese cliente (ni en
+`directory` ni con hilo ruteado ahí), `404` nunca ha escrito y no hay plantilla,
+`409` **ventana de 24 h cerrada** y no hay plantilla, `502` Meta rechazó el envío (o
+la plantilla no está aprobada). Solo texto (sin archivos todavía). **No** toma el
+hilo como relevo humano: es el agente del cliente hablando, y queda en `messages` con
+`author=portal`.
 
-La regla de las 24 h es de WhatsApp, no nuestra: sin plantilla aprobada solo se
-puede escribir a quien nos escribió hace menos de 24 h. Si el portal necesita avisar
-"en frío", la persona tiene que mandar cualquier mensaje al número de Tratto primero.
+**Texto vs plantilla.** Dentro de la ventana de 24 h (la persona nos escribió hace
+menos de un día) va `text` tal cual — gratis hasta el 1 oct 2026. Fuera de ella, o
+si el número nunca ha escrito, WhatsApp solo acepta una **plantilla aprobada**: si el
+portal la mandó en `template` se usa esa (`body` son los `{{n}}` del cuerpo en orden,
+`urlSuffix` el `{{1}}` del botón de URL; los saltos de línea se aplanan solos), y
+**Meta cobra** ese mensaje. Sin plantilla, el error de arriba. Un número sin hilo
+tiene que estar en `directory` del tenant; el destino se arma como `52` + 10 dígitos.
+
+Plantillas dadas de alta en la WABA (se crean por API, `POST
+/{WABA_ID}/message_templates`, y Meta las revisa — las de categoría *utility* suelen
+aprobarse en minutos u horas; se consultan con `GET
+/{WABA_ID}/message_templates?fields=name,status`):
+
+| nombre | cuerpo | botón |
+|---|---|---|
+| `cotizacion_verificar` | Hola {{1}}, se generó la cotización {{2}} ({{3}}) en el portal de Janing y necesita tu verificación. | `https://janing.usetratto.com/oportunidades/{{1}}` |
+| `mencion_actualizacion` | Tienes una mención de {{1}} en {{2}} (portal de Janing): "{{3}}". Ábrela para responder. | `https://janing.usetratto.com/{{1}}` |
 
 ### Fotos, documentos, audios y videos
 

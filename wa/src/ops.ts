@@ -2,7 +2,7 @@
 // ADMIN_TOKEN) y por la bandeja (/inbox/api/*, sesión de usuario). Una sola
 // implementación para que las dos puertas hagan exactamente lo mismo.
 import type { Env } from './env';
-import { phone10, sendText } from './wa';
+import { phone10, sendTemplate, sendText, type Plantilla } from './wa';
 import { logOutbound } from './routing';
 
 export interface Result { status: number; body: Record<string, unknown> | unknown[] }
@@ -93,11 +93,15 @@ export async function sendHuman(
  * Lo que un PORTAL manda por su cuenta (p. ej. "te llegó una cotización para
  * verificar"). A diferencia de sendHuman NO toma el hilo: es el agente de ese
  * cliente hablando, no una persona. Solo a números que le pertenecen al tenant
- * —por directorio o por hilo pegajoso— y solo dentro de la ventana de 24 h:
- * fuera de ella WhatsApp exige plantilla y esta cuenta no tiene ninguna.
+ * (por directorio o por hilo pegajoso).
+ *
+ * Dentro de la ventana de 24 h va como texto (gratis hasta el 1 oct 2026).
+ * Fuera de ella —o si el número nunca ha escrito— solo puede ir una PLANTILLA
+ * aprobada por Meta (`template`); sin plantilla es 409/404. Meta cobra cada
+ * plantilla, por eso el texto va primero cuando se puede.
  */
 export async function sendPortal(
-  env: Env, args: { tenant: string; phone: string; text: string },
+  env: Env, args: { tenant: string; phone: string; text: string; template?: Plantilla | null },
 ): Promise<Result> {
   const p10 = phone10(args.phone ?? '');
   const text = (args.text ?? '').trim();
@@ -105,6 +109,7 @@ export async function sendPortal(
   if (!tenant) return fail(400, 'tenant requerido');
   if (p10.length !== 10) return fail(400, 'teléfono inválido');
   if (!text) return fail(400, 'texto vacío');
+  const tpl = args.template?.name ? args.template : null;
 
   const t = await env.DB.prepare(`SELECT active FROM tenants WHERE slug = ?`).bind(tenant).first<{ active: number }>();
   if (!t || !t.active) return fail(403, 'tenant desconocido o inactivo');
@@ -112,34 +117,45 @@ export async function sendPortal(
   const th = await env.DB.prepare(
     `SELECT wa_from, tenant_slug, last_seen > datetime('now','-24 hours') AS abierto FROM threads WHERE phone10 = ?`,
   ).bind(p10).first<{ wa_from: string; tenant_slug: string | null; abierto: number }>();
-  if (!th) {
-    return fail(404, 'ese número nunca ha escrito',
-      'WhatsApp solo deja escribirle a quien nos escribió primero (y hace menos de 24 h). ' +
-      'Pídele que mande cualquier mensaje al número de Tratto.');
-  }
 
   // El número tiene que ser de ESE cliente: por directorio, o porque su hilo ya
   // quedó ruteado ahí. Un portal jamás le escribe a la gente de otro.
   const dir = await env.DB.prepare(`SELECT tenant_slug FROM directory WHERE phone10 = ?`)
     .bind(p10).first<{ tenant_slug: string }>();
-  const suyo = dir ? dir.tenant_slug === tenant : th.tenant_slug === tenant;
+  const suyo = dir ? dir.tenant_slug === tenant : th?.tenant_slug === tenant;
   if (!suyo) return fail(403, 'ese número no pertenece a este cliente');
 
-  if (!th.abierto) {
-    return fail(409, 'ventana de 24 h cerrada',
-      'La persona no escribe desde hace más de 24 h. WhatsApp solo permite plantillas ' +
-      'aprobadas fuera de esa ventana, y esta cuenta no tiene ninguna.');
+  const abierto = !!th?.abierto;
+  if (!abierto && !tpl) {
+    return th
+      ? fail(409, 'ventana de 24 h cerrada',
+          'La persona no escribe desde hace más de 24 h. WhatsApp solo permite plantillas ' +
+          'aprobadas fuera de esa ventana.')
+      : fail(404, 'ese número nunca ha escrito',
+          'WhatsApp solo deja escribirle a quien nos escribió primero (y hace menos de 24 h), ' +
+          'o con una plantilla aprobada.');
   }
 
+  // Sin hilo (nunca escribió) el destino se arma con la lada de México: el
+  // directorio guarda 10 dígitos y hoy todos los teléfonos son mexicanos.
+  const to = th?.wa_from ?? `52${p10}`;
+  let modo: 'texto' | 'plantilla' = abierto ? 'texto' : 'plantilla';
   try {
-    await sendText(env, th.wa_from, text);
+    if (modo === 'texto') await sendText(env, to, text);
+    else await sendTemplate(env, to, tpl!);
   } catch (err) {
-    return fail(502, 'WhatsApp rechazó el envío', String(err));
+    return fail(502, modo === 'texto' ? 'WhatsApp rechazó el envío' : `WhatsApp rechazó la plantilla ${tpl!.name}`, String(err));
+  }
+  if (!th) {
+    await env.DB.prepare(
+      `INSERT OR IGNORE INTO threads (phone10, wa_from, tenant_slug, resolved_by, profile_name) VALUES (?, ?, ?, 'directory', ?)`,
+    ).bind(p10, to, tenant, null).run();
   }
   await logOutbound(env, {
-    phone10: p10, to: th.wa_from, tenantSlug: tenant, body: text, author: 'portal', sentBy: tenant,
+    phone10: p10, to, tenantSlug: tenant, author: 'portal', sentBy: tenant,
+    body: modo === 'texto' ? text : `[plantilla ${tpl!.name}] ${text}`,
   });
-  return ok({ ok: true });
+  return ok({ ok: true, modo });
 }
 
 /** Tomar (hours > 0) o soltar (hours 0) el hilo sin escribir nada. */

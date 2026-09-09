@@ -8,7 +8,7 @@
 // Cloudflare Access enfrente porque Meta no puede presentar credenciales.
 import type { Env } from './env';
 import { hmacHex, timingSafeEqual } from './crypto';
-import { sendText, markRead } from './wa';
+import { sendText, markRead, type Plantilla } from './wa';
 import {
   alreadyProcessed, dispatchToTenant, logMessage, logOutbound, resolve, touchThread,
   type Incoming,
@@ -247,9 +247,9 @@ export default {
       if (!header.startsWith('sha256=') || !timingSafeEqual(expected, header.slice('sha256='.length).toLowerCase())) {
         return Response.json({ error: 'firma inválida' }, { status: 401 });
       }
-      let b: { tenant?: string; phone?: string; text?: string };
+      let b: { tenant?: string; phone?: string; text?: string; template?: Plantilla | null };
       try { b = JSON.parse(raw); } catch { return Response.json({ error: 'cuerpo no es JSON' }, { status: 400 }); }
-      const r = await sendPortal(env, { tenant: b.tenant ?? '', phone: b.phone ?? '', text: b.text ?? '' });
+      const r = await sendPortal(env, { tenant: b.tenant ?? '', phone: b.phone ?? '', text: b.text ?? '', template: b.template ?? null });
       return Response.json(r.body, { status: r.status });
     }
 

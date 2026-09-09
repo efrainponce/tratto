@@ -42,6 +42,34 @@ export async function sendText(env: Env, to: string, body: string): Promise<void
 }
 
 /**
+ * Plantilla aprobada por Meta: la única forma de escribirle a alguien fuera de
+ * la ventana de 24 h. `body` son los {{n}} del cuerpo en orden; `urlSuffix` el
+ * {{1}} del botón de URL (si la plantilla lo tiene). Meta cobra estos mensajes.
+ */
+export interface Plantilla { name: string; language?: string; body?: string[]; urlSuffix?: string | null }
+
+// Los parámetros de plantilla no admiten saltos de línea, tabs ni más de 4
+// espacios seguidos (error 132018): se aplanan aquí para que ningún portal
+// tenga que saberlo.
+function paramLimpio(v: string): string {
+  return v.replace(/[\r\n\t]+/g, ' ').replace(/ {2,}/g, ' ').trim().slice(0, 1000) || '-';
+}
+
+export async function sendTemplate(env: Env, to: string, t: Plantilla): Promise<void> {
+  const components: unknown[] = [];
+  if (t.body?.length) {
+    components.push({ type: 'body', parameters: t.body.map(v => ({ type: 'text', text: paramLimpio(String(v)) })) });
+  }
+  if (t.urlSuffix) {
+    components.push({ type: 'button', sub_type: 'url', index: '0', parameters: [{ type: 'text', text: t.urlSuffix }] });
+  }
+  await graphPost(env, {
+    to: normalizeMxTo(to), type: 'template',
+    template: { name: t.name, language: { code: t.language || 'es_MX' }, components },
+  });
+}
+
+/**
  * Un archivo entrante, en dos viajes: el media_id da una URL de CDN que caduca en
  * minutos, y esa URL solo entrega los bytes con el mismo Bearer. Se devuelve el
  * stream sin bufferear: un documento puede pesar hasta 100 MB.
