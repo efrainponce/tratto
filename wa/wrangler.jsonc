@@ -28,6 +28,11 @@
   //   npx wrangler r2 bucket create tratto-wa-media
   //   npx wrangler r2 bucket lifecycle add tratto-wa-media --prefix t/ --expire-days 90
   "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "tratto-wa-media" }],
+  // Portales de la MISMA cuenta se despachan por service binding en vez de por
+  // HTTP público: la llamada va Worker→Worker y no pasa por Cloudflare Access
+  // (que protege el hostname del portal y no puede autenticar al gateway). El
+  // tenant lo pide con inbound_url = "binding:JANING". Ver routing.ts.
+  "services": [{ "binding": "JANING", "service": "janing-portal" }],
   "vars": {
     "ENVIRONMENT": "prod",
     "PUBLIC_URL": "https://wa.usetratto.com",

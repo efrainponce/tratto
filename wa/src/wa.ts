@@ -52,6 +52,9 @@ export interface Plantilla {
    *  envío va ahí (subido antes a Meta). Sin esto, el archivo no cabe en la
    *  plantilla y se manda solo el texto. */
   header?: 'document' | null;
+  /** Posición del botón de URL entre TODOS los botones de la plantilla (los
+   *  QUICK_REPLY cuentan). 0 por omisión. */
+  urlIndex?: number;
 }
 
 /** Un archivo para mandar: los bytes se suben a Meta (`/media`) y el id
@@ -102,7 +105,7 @@ export async function sendTemplate(env: Env, to: string, t: Plantilla, headerDoc
     components.push({ type: 'body', parameters: t.body.map(v => ({ type: 'text', text: paramLimpio(String(v)) })) });
   }
   if (t.urlSuffix) {
-    components.push({ type: 'button', sub_type: 'url', index: '0', parameters: [{ type: 'text', text: t.urlSuffix }] });
+    components.push({ type: 'button', sub_type: 'url', index: String(t.urlIndex ?? 0), parameters: [{ type: 'text', text: t.urlSuffix }] });
   }
   await graphPost(env, {
     to: normalizeMxTo(to), type: 'template',

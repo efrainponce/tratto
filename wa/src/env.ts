@@ -1,6 +1,7 @@
 export interface Env {
   DB: D1Database;
   MEDIA: R2Bucket;                  // fotos/documentos entrantes, de paso — ver media.ts
+  JANING?: Fetcher;                 // service binding al Worker janing-portal (inbound_url = "binding:JANING")
   ENVIRONMENT: string;
   PUBLIC_URL?: string;              // base de las URLs firmadas que se dan a los portales
 

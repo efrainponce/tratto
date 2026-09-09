@@ -48,6 +48,10 @@ interface MetaMessage {
   audio?: MetaMedia;
   video?: MetaMedia;
   sticker?: MetaMedia;
+  /** Respuesta a un botón QUICK_REPLY de plantilla: llega como type 'button'. */
+  button?: { text?: string; payload?: string };
+  /** Botones de mensajes interactivos (no plantilla). */
+  interactive?: { type?: string; button_reply?: { id?: string; title?: string }; list_reply?: { id?: string; title?: string } };
 }
 
 function mediaOf(m: MetaMessage): MediaRef | null {
@@ -79,11 +83,16 @@ function extract(body: MetaBody): Incoming[] {
         const media = mediaOf(m);
         // El caption de una foto/documento va como texto: así el agente lo lee igual.
         const caption = media ? (m[m.type as 'image']?.caption ?? null) : null;
+        // Tocar un botón de plantilla ("GO, fírmala") o de un mensaje
+        // interactivo es, para el portal, lo mismo que escribir ese texto.
+        const boton = m.type === 'button' ? (m.button?.text ?? m.button?.payload ?? null)
+          : m.type === 'interactive' ? (m.interactive?.button_reply?.title ?? m.interactive?.list_reply?.title ?? null)
+          : null;
         out.push({
           waId: m.id,
           from: m.from,
-          kind: m.type,
-          text: m.type === 'text' ? (m.text?.body ?? null) : caption,
+          kind: boton != null ? 'text' : m.type,
+          text: m.type === 'text' ? (m.text?.body ?? null) : (boton ?? caption),
           media,
           stored: null,
           profileName: names.get(m.from) ?? null,

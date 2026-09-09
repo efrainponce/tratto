@@ -225,7 +225,18 @@ export async function dispatchToTenant(
     headers['x-tratto-signature'] = `sha256=${await hmacHex(env.GATEWAY_SECRET, payload)}`;
   }
 
-  const res = await fetch(tenant.inbound_url, { method: 'POST', headers, body: payload });
+  // "binding:NOMBRE" → service binding (Worker→Worker, sin Access enfrente).
+  // La URL que ve el portal es su propio hostname para que sus rutas no
+  // noten la diferencia; la firma HMAC va igual.
+  let res: Response;
+  if (tenant.inbound_url.startsWith('binding:')) {
+    const name = tenant.inbound_url.slice('binding:'.length);
+    const svc = (env as unknown as Record<string, Fetcher | undefined>)[name];
+    if (!svc) throw new Error(`service binding ${name} no existe en el gateway`);
+    res = await svc.fetch(new Request(`https://${tenant.slug}.usetratto.com/api/wa/inbound`, { method: 'POST', headers, body: payload }));
+  } else {
+    res = await fetch(tenant.inbound_url, { method: 'POST', headers, body: payload });
+  }
   if (!res.ok) {
     const detail = await res.text().catch(() => '');
     throw new Error(`portal ${tenant.slug} respondió ${res.status}: ${detail.slice(0, 200)}`);
