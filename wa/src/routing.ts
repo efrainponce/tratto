@@ -197,6 +197,29 @@ export interface DispatchResult { status: string; reply: string | null; sends: E
  * GATEWAY_SECRET) — es su única prueba de que el mensaje viene de aquí y no de
  * cualquiera que descubra la URL.
  */
+/** Tope de lo que se manda en el payload. El portal de Janing rechaza arriba
+ *  de 10 MB de todos modos, y base64 infla un tercio: por encima de esto se
+ *  manda solo la URL y que el portal se las arregle. */
+const MAX_INLINE_BYTES = 10 * 1024 * 1024;
+
+/** Lee el objeto de R2 y lo devuelve en base64, o null si no se puede. Que
+ *  falle NO tumba el despacho: el portal todavía tiene la URL firmada. */
+async function bytesBase64(env: Env, key: string, size: number): Promise<string | null> {
+  if (size > MAX_INLINE_BYTES) return null;
+  try {
+    const obj = await env.MEDIA.get(key);
+    if (!obj) return null;
+    const u8 = new Uint8Array(await obj.arrayBuffer());
+    let bin = '';
+    const TRAMO = 0x8000;
+    for (let i = 0; i < u8.length; i += TRAMO) bin += String.fromCharCode(...u8.subarray(i, i + TRAMO));
+    return btoa(bin);
+  } catch (err) {
+    console.error('bytesBase64', key, err);
+    return null;
+  }
+}
+
 export async function dispatchToTenant(
   env: Env, msg: Incoming, r: Resolution,
 ): Promise<DispatchResult> {
@@ -208,9 +231,21 @@ export async function dispatchToTenant(
 
   // `media` va null en texto, y también si Meta no nos dejó bajar el archivo: el
   // portal ve por `kind` que había algo y decide qué hacer.
+  //
+  // Con un tenant por service binding los bytes van DENTRO del payload
+  // (`data`, base64) además de la URL firmada: desde dentro del request que le
+  // acabamos de entregar, el portal no puede hacerle fetch a
+  // wa.usetratto.com — Cloudflare corta esa vuelta como recursión y devuelve
+  // 522. Es el mismo muro que obligó a que sus envíos salieran por `sends[]`.
+  // Por URL (tenant HTTP normal) no aplica: ahí el portal es otro origen.
   const s = msg.stored;
+  const porBinding = tenant.inbound_url.startsWith('binding:');
   const media = s
-    ? { url: await signedUrl(env, s.key), mime: s.mime, filename: s.filename, size: s.size, sha256: s.sha256 }
+    ? {
+        url: await signedUrl(env, s.key),
+        data: porBinding ? await bytesBase64(env, s.key, s.size) : null,
+        mime: s.mime, filename: s.filename, size: s.size, sha256: s.sha256,
+      }
     : null;
 
   const payload = JSON.stringify({

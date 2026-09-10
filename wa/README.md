@@ -181,6 +181,7 @@ el mensaje llega así (`text` lleva el caption, si lo hubo):
   "kind": "document", "text": "el plano que te dije",
   "media": {
     "url": "https://wa.usetratto.com/media/t/janing/5511112222/wamidHBg….pdf?exp=1757086400&sig=…",
+    "data": null,
     "mime": "application/pdf", "filename": "plano.pdf", "size": 812331, "sha256": "…"
   }
 }
@@ -189,7 +190,14 @@ el mensaje llega así (`text` lleva el caption, si lo hubo):
 - **El gateway es tránsito, no archivo.** La URL está firmada con `GATEWAY_SECRET`
   y vale **24 h**. El portal que quiera quedarse el archivo hace `fetch(url)` y lo
   guarda en **su propio** R2 al recibir el mensaje: son ~30 líneas iguales en cada
-  portal. La copia del gateway vive bajo `t/{tenant}/…` y una regla de ciclo de vida
+  portal.
+- **`data` (base64) solo para tenants por `binding:`**, y ahí es la vía buena: el
+  portal NO puede hacerle `fetch` a la URL desde dentro del request que le acabamos
+  de entregar por el service binding — esa vuelta a `wa.usetratto.com` Cloudflare
+  la corta como recursión y devuelve **522**. Es el mismo muro que obliga a que sus
+  envíos salientes vayan por `sends[]`. Por URL (tenant HTTP) `data` va `null`: ahí
+  el portal es otro origen y el `fetch` funciona. Arriba de 10 MB va `null` siempre;
+  si leer R2 falla también, queda `null` y al portal le queda la URL. La copia del gateway vive bajo `t/{tenant}/…` y una regla de ciclo de vida
   la borra a los **90 días**. Los leads (`lead/…`) se quedan: no tienen otro lugar.
 - La firma cubre la key completa, prefijo de tenant incluido: un portal solo puede
   bajar lo que se le despachó a él. Los portales **nunca** ven el `WHATSAPP_TOKEN`.
