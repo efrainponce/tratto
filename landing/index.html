@@ -207,6 +207,7 @@
 
   /* ============ HERO ============ */
   .hero { padding: 56px 0 24px; }
+  .hero .eyebrow { margin-bottom: 18px; }
   .hero h1 {
     margin-top: 0;
     font-size: clamp(32px, 3.8vw, 46px);
@@ -485,6 +486,20 @@
   @media (max-width: 640px) { .price { padding: 24px 18px; } .price-main .lede { font-size: 16px; } .price-note { font-size: 15px; } }
 
   /* ============ HECHO A MANO ============ */
+  .vs { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 36px; }
+  .vs > div { padding: 24px 26px; border-radius: var(--r-2xl); border: 1px solid var(--border); background: var(--bg-raised); }
+  .vs > div.t { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .vs .lab { display: block; font: 600 11px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+  .vs .t .lab { color: color-mix(in srgb, var(--accent-ink) 72%, transparent); }
+  .vs p b { font-weight: 600; }
+  .vs p { margin-top: 12px; font-family: var(--font-display); font-size: clamp(19px, 2vw, 24px); font-weight: 500; line-height: 1.25; letter-spacing: -0.015em; text-wrap: pretty; }
+  .vs > div:not(.t) p { color: var(--ink-2); }
+  .free { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .free .q { width: 100%; font-size: 16.5px; color: var(--ink-2); margin-bottom: 6px; }
+  .free .q b { color: var(--ink); font-weight: 600; }
+  .free .c { font-size: 13.5px; font-weight: 500; padding: 8px 13px; border-radius: var(--r-pill); border: 1px solid var(--border); background: var(--bg-raised); color: var(--ink-2); }
+  .free .c.t { background: var(--accent-soft); border-color: transparent; color: var(--accent); font-weight: 600; }
+  @media (max-width: 760px) { .vs { grid-template-columns: 1fr; gap: 12px; margin-top: 28px; } .vs > div { padding: 20px 20px; } .free { margin-top: 24px; } .free .c { font-size: 13px; padding: 7px 11px; } }
   .bigtime { display: grid; grid-template-columns: auto 1fr; gap: 24px 64px; align-items: end; margin-top: 48px; padding-top: 36px; border-top: 1px solid var(--border); }
   .bigtime .num { display: flex; align-items: baseline; gap: .12em; font-family: var(--font-display); font-size: clamp(96px, 15vw, 192px); font-weight: 600; letter-spacing: -0.05em; line-height: .82; color: var(--accent); white-space: nowrap; }
   .bigtime .num small { font-size: clamp(30px, 3.4vw, 44px); font-weight: 600; letter-spacing: -0.02em; line-height: 1; color: var(--ink); }
@@ -544,9 +559,9 @@
     <a class="brand" href="#top" aria-label="Tratto, inicio"><span class="brand-mark">T</span><span class="brand-word">Tratto</span></a>
     <nav class="nav-links" aria-label="Secciones">
       <a class="quiet" href="#flujo">Cómo funciona</a>
+      <a class="quiet" href="#hecho">Tu portal</a>
       <a class="quiet" href="#whatsapp">WhatsApp</a>
       <a class="quiet" href="#precio">Precio</a>
-      <a class="quiet" href="#preguntas">Preguntas</a>
       <a class="btn btn-primary" data-wa href="https://wa.me/5213349424216?text=Hola%2C%20quiero%20ver%20Tratto" rel="noopener"><span class="long">Escríbenos por WhatsApp</span><span class="short">WhatsApp</span></a>
     </nav>
   </div>
@@ -558,8 +573,9 @@
   <section class="hero">
     <div class="hero-grid">
       <div class="hero-copy">
+        <p class="eyebrow">Tu portal, hecho a mano para tu negocio</p>
         <h1>Tu venta vive en el Excel de alguien. <em>Tratto la pone en un solo lugar.</em></h1>
-        <p class="lede">Costeo, cotización, seguimiento, entrega y cobro. Un expediente por venta, para todo tu equipo.</p>
+        <p class="lede">No es un CRM al que te adaptas. Es un portal construido para tu negocio, de la cotización al cobro, con todo tu equipo.</p>
         <div class="cta">
           <a class="btn btn-primary btn-lg" data-wa href="https://wa.me/5213349424216?text=Hola%2C%20quiero%20ver%20Tratto" rel="noopener">Escríbenos por WhatsApp</a>
           <a class="btn btn-ghost btn-lg" href="#flujo">Ver cómo funciona</a>
@@ -743,7 +759,40 @@
 
         </div>
       </div>
-      <p class="steps-note">Estas etapas son de una empresa de uniformes. <b>Las tuyas se definen contigo.</b></p>
+      <p class="steps-note">Estas etapas son de una empresa de uniformes. <b>Las tuyas se construyen contigo</b>, aunque tengan un paso que ningún CRM tiene.</p>
+    </div>
+  </section>
+
+  <!-- ============ HECHO A MANO ============ -->
+  <section class="block" id="hecho">
+    <div class="wide">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Hecho a mano</p>
+          <h2>No es un software para todos.<br>Es el tuyo.</h2>
+        </div>
+        <p class="lede">Tú no te adaptas a Tratto. Tratto se construye alrededor de tu negocio.</p>
+      </div>
+      <div class="vs">
+        <div><span class="lab">Un CRM genérico</span><p>Tú te adaptas a él. Campos que no usas, etapas que no son las tuyas, y el costeo sigue en Excel.</p></div>
+        <div class="t"><span class="lab">Tu portal en Tratto</span><p>Tus etapas, tus fórmulas, tus PDFs con tu membrete, tus permisos, tus palabras. <b>Un sistema aparte, solo tuyo:</b> no es una cuenta en un software compartido, y nada se comparte con nadie.</p></div>
+      </div>
+      <div class="free">
+        <p class="q"><b>¿Tu proceso tiene un paso raro?</b> Ese paso se construye. Algunos que ya hicimos a la medida:</p>
+        <span class="c">Tallas por corporación</span><span class="c">Estimaciones de obra</span><span class="c">Firmas en cadena: compras, dirección, proveedor</span><span class="c">Catálogos del cliente</span><span class="c">Validación de margen por dirección</span><span class="c">Inventario y entregas</span><span class="c">Cotización con monto en letras</span><span class="c t">El tuyo</span>
+      </div>
+      <div class="bigtime" aria-label="Tiempo de implementación">
+        <div class="num" aria-hidden="true">5<small>semanas</small></div>
+        <div class="txt">
+          <p>De la primera entrevista a que <b>tu equipo trabaje con sus ventas reales</b>.</p>
+        </div>
+      </div>
+      <div class="proc">
+        <div><span class="n">Semana 1</span><h3>Entrevistas</h3></div>
+        <div><span class="n">Semanas 2 a 4</span><h3>Construimos tu portal</h3></div>
+        <div><span class="n">Semana 5</span><h3>Migramos y arrancas</h3></div>
+        <div><span class="n">Después</span><h3>Mejora continua, incluida</h3></div>
+      </div>
     </div>
   </section>
 
@@ -804,9 +853,9 @@
           <div class="price-num"><span class="cur">desde</span> $20,000 <span class="unit">MXN al mes</span></div>
           <p class="lede">Renta fija, sin cobro por usuario. Incluye construir tu portal y ajustarlo cuando cambies.</p>
           <div class="anchor">
-            <div><span><b>Sin plazo forzoso.</b> Mes a mes, y te llevas tus datos.</span></div>
+            <div><span><b>Plazo de 6 meses.</b> La construcción va dentro.</span></div>
+            <div><span><b>Después, mes a mes.</b> Sin renovación automática.</span></div>
             <div><span><b>Con factura</b> y en pesos.</span></div>
-            <div><span><b>Menos que un auxiliar administrativo.</b></span></div>
           </div>
         </div>
         <ul class="price-list">
@@ -816,33 +865,8 @@
           <li><b>Lo que tu operación necesite</b><span>Tallas, órdenes de compra, inventario, entregas.</span></li>
         </ul>
       </div>
-      <p class="price-note"><b>¿Por qué no un CRM de $200 por usuario?</b> Porque no costea con tus fórmulas ni saca tu PDF. Terminas pagando el CRM y siguiendo en Excel.</p>
+      <p class="price-note"><b>No nos compares con Monday. Compáranos con contratar a un desarrollador.</b> Tratto no es una app que configuras: es el equipo que construye tu software, lo hospeda y lo sigue mejorando. Por menos que un programador en nómina, y sin que un día se vaya con todo.</p>
 
-    </div>
-  </section>
-
-  <!-- ============ HECHO A MANO ============ -->
-  <section class="block" id="hecho">
-    <div class="wide">
-      <div class="section-head">
-        <div>
-          <p class="eyebrow">Hecho a mano</p>
-          <h2>No es un software para todos.<br>Es el tuyo.</h2>
-        </div>
-        <p class="lede">Entrevistamos a tu equipo y construimos a partir de eso.</p>
-      </div>
-      <div class="bigtime" aria-label="Tiempo de implementación">
-        <div class="num" aria-hidden="true">5<small>semanas</small></div>
-        <div class="txt">
-          <p>De la primera entrevista a que <b>tu equipo trabaje con sus ventas reales</b>.</p>
-        </div>
-      </div>
-      <div class="proc">
-        <div><span class="n">Semana 1</span><h3>Entrevistas</h3></div>
-        <div><span class="n">Semanas 2 a 4</span><h3>Construimos tu portal</h3></div>
-        <div><span class="n">Semana 5</span><h3>Migramos y arrancas</h3></div>
-        <div><span class="n">Después</span><h3>Mejora continua, incluida</h3></div>
-      </div>
     </div>
   </section>
 
@@ -857,11 +881,11 @@
         <div class="faq-list">
           <details>
             <summary>¿Cuánto voy a pagar?</summary>
-            <p>Se define contigo tras las entrevistas. Hoy nuestros clientes pagan <b>entre $24,500 y $30,000 al mes</b>. La construcción se cobra como el primer mes.</p>
+            <p>Se define contigo tras las entrevistas. Hoy nuestros clientes pagan <b>entre $24,500 y $30,000 al mes</b>. La construcción va dentro del plazo.</p>
           </details>
           <details>
             <summary>¿Hay plazo forzoso?</summary>
-            <p>No. Mes a mes. Cancelas con 30 días de aviso y <b>te llevas toda tu información en Excel</b>.</p>
+            <p>Sí: <b>seis meses desde la firma</b>, con la construcción incluida. Al terminar, mes a mes, sin renovación automática. Si prefieres 12 meses, un mes de cortesía. Cuando te vayas, <b>te llevas toda tu información en Excel</b>.</p>
           </details>
           <details>
             <summary>¿Cuánto tiempo de mi equipo necesitan?</summary>
@@ -869,7 +893,7 @@
           </details>
           <details>
             <summary>¿Y mis datos? ¿Y mi contador?</summary>
-            <p>Los datos son tuyos, cifrados y con respaldos; <b>nadie fuera de tu equipo los ve</b>. Tu contador sigue con su sistema: todo se exporta a Excel y PDF.</p>
+            <p>Tu portal es <b>un sistema aparte, solo para tu empresa</b>: ni servidor ni datos compartidos con nadie. Cifrado y con respaldos. Tu contador sigue con su sistema: todo se exporta a Excel y PDF.</p>
           </details>
         </div>
       </div>
