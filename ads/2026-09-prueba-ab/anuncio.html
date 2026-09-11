@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Anuncio Tratto — prueba A/B</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+  /* Lienzo fijo 1080×1350 (4:5). Se renderiza con Chrome headless: anuncio.html?v=a | ?v=b */
+  :root {
+    --bg: #161412; --ink: #efe9dd; --ink-2: #aaa294; --accent: #8cc4a8; --brand: #1f4d3f;
+    --wa-bg: #0b141a; --wa-head: #202c33; --wa-in: #202c33; --wa-out: #005c4b; --wa-ink: #e9edef; --wa-meta: #8696a0;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1080px; height: 1350px; background: var(--bg); overflow: hidden; }
+  body { font-family: Inter, system-ui, sans-serif; color: var(--ink); padding: 84px 88px; display: flex; flex-direction: column; }
+  .brand { display: flex; align-items: center; gap: 16px; }
+  .mark { width: 52px; height: 52px; border-radius: 13px; background: var(--brand); color: #fff; display: grid; place-items: center;
+          font: 700 31px/1 'Familjen Grotesk', sans-serif; }
+  .word { font: 600 36px/1 'Familjen Grotesk', sans-serif; letter-spacing: -0.02em; }
+  h1 { font: 700 96px/1.02 'Familjen Grotesk', sans-serif; letter-spacing: -0.035em; margin-top: 64px; text-wrap: balance; }
+
+  .chat { margin-top: auto; border-radius: 28px; overflow: hidden; background: var(--wa-bg); box-shadow: 0 30px 80px rgba(0,0,0,.45); }
+  .chat-head { background: var(--wa-head); display: flex; align-items: center; gap: 18px; padding: 22px 30px; }
+  .chat-head .mark { width: 56px; height: 56px; border-radius: 50%; font-size: 30px; }
+  .chat-head b { font: 600 28px/1.1 Inter, sans-serif; color: var(--wa-ink); display: block; }
+  .chat-head small { font-size: 21px; color: var(--wa-meta); }
+  .msgs { padding: 34px 30px 38px; display: flex; flex-direction: column; gap: 20px; }
+  .b { max-width: 82%; padding: 18px 24px 14px; border-radius: 20px; font-size: 30px; line-height: 1.34; color: var(--wa-ink); }
+  .b .t { display: block; text-align: right; font-size: 18px; color: var(--wa-meta); margin-top: 6px; }
+  .out { align-self: flex-end; background: var(--wa-out); border-top-right-radius: 6px; }
+  .in { align-self: flex-start; background: var(--wa-in); border-top-left-radius: 6px; }
+  .in strong { font-weight: 600; color: #fff; }
+
+  .cta { margin-top: auto; display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
+  .cta p { font: 700 50px/1.08 'Familjen Grotesk', sans-serif; letter-spacing: -0.02em; color: var(--accent); }
+  .cta span { font-size: 24px; color: var(--ink-2); white-space: nowrap; padding-bottom: 8px; }
+</style>
+</head>
+<body>
+  <div class="brand"><span class="mark">T</span><span class="word">Tratto</span></div>
+  <h1 id="q"></h1>
+  <div class="chat">
+    <div class="chat-head"><span class="mark">T</span><div><b>Tratto</b><small>en línea</small></div></div>
+    <div class="msgs">
+      <div class="b out"><span id="pregunta"></span><span class="t">9:41 ✓✓</span></div>
+      <div class="b in"><span id="respuesta"></span><span class="t">9:41</span></div>
+    </div>
+  </div>
+  <div class="cta"><p>Pregúntale a Tratto<br>por WhatsApp.</p><span>usetratto.com</span></div>
+<script>
+  // Cifras inventadas: nunca datos de un cliente real.
+  var V = {
+    a: {
+      q: '¿Cuánto te deben hoy tus clientes?',
+      pregunta: '¿Cuánto nos deben hoy?',
+      respuesta: '<strong>$1,284,500</strong> por cobrar. 3 cobros vencidos; el más grande es de <strong>$412,000</strong> (18 días). ¿Te mando el detalle?'
+    },
+    b: {
+      q: '¿Cuánto cotizó tu empresa esta semana?',
+      pregunta: '¿Cuánto cotizamos esta semana?',
+      respuesta: '<strong>$3,760,200</strong> en 14 cotizaciones. 5 siguen sin respuesta del cliente; la más grande es de <strong>$980,000</strong>. ¿Te mando la lista?'
+    }
+  };
+  var v = V[new URLSearchParams(location.search).get('v')] || V.a;
+  document.getElementById('q').textContent = v.q;
+  document.getElementById('pregunta').textContent = v.pregunta;
+  document.getElementById('respuesta').innerHTML = v.respuesta;
+</script>
+</body>
+</html>
