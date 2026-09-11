@@ -244,11 +244,13 @@
   }
 
   /* ============ HERO: HOY → EN TRATTO ============ */
-  .hero-ba { margin: 0; justify-self: center; width: 100%; max-width: 720px; }
-  .ba { display: grid; grid-template-columns: .76fr 30px 1.24fr; gap: 12px; align-items: center; }
+  .hero-ba { margin: 0; justify-self: center; width: 100%; max-width: 1040px; }
+  .ba { display: grid; grid-template-columns: .72fr 30px 1.1fr 30px .9fr; gap: 12px; align-items: center; }
   .ba-lab { display: block; font: 600 11px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 10px; }
   .ba-before { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
   .ba-after { min-width: 0; }
+  .ba-ask { min-width: 0; }
+  .ba-chat { text-align: left; box-shadow: var(--shadow); border: 1px solid var(--border); }
   .file { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--bg-raised); border: 1px solid var(--border); border-radius: var(--r-lg); font-size: 11.5px; color: var(--ink-2); box-shadow: 0 1px 2px rgba(43,41,37,.06); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
   .file::before, .tool::before { content: ""; width: 11px; height: 13px; border-radius: 2px; background: var(--tc); flex: none; }
   .file.xls, .tool.xls { --tc: #3f8f5a; }
@@ -286,12 +288,24 @@
   .ba.play .opp { transition: box-shadow .7s ease; }
   .ba.play.done .opp { box-shadow: 0 0 0 3px var(--accent-soft), var(--shadow); }
   .ba.play .ba-arrow::before { content: ""; position: absolute; top: -2px; left: 0; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); opacity: 0; }
-  .ba.play.flying .ba-arrow::before { animation: dash .9s linear infinite; }
+  .ba.play.flying .ba-arrow:not(.ba-arrow2)::before, .ba.play.asking .ba-arrow2::before { animation: dash .9s linear infinite; }
+  @keyframes dashv { 0% { top: 0; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { top: calc(100% - 5px); opacity: 0; } }
   @keyframes dash { 0% { left: 0; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { left: calc(100% - 5px); opacity: 0; } }
   @media (max-width: 560px) { .ba.play .ba-arrow::before { left: -2px; top: 0; } @keyframes dash { 0% { top: 0; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { top: calc(100% - 5px); opacity: 0; } } }
   .ba.snap * { transition: none !important; }
+  /* Tablet: el chat baja debajo del expediente, con flecha vertical. */
+  @media (max-width: 900px) {
+    .hero-ba { max-width: 720px; }
+    .ba { grid-template-columns: .76fr 30px 1.24fr; }
+    .ba-arrow2, .ba-ask { grid-column: 3; }
+    .ba-arrow2 { width: 1px; height: 22px; justify-self: center; margin-top: 0; }
+    .ba-arrow2::after { right: auto; left: 50%; top: auto; bottom: -1px; transform: translateX(-50%); border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 7px solid var(--ink-4); border-bottom: 0; }
+    .ba.play .ba-arrow2::before { left: -2px; top: 0; }
+    .ba.play.asking .ba-arrow2::before { animation-name: dashv; }
+  }
   @media (max-width: 560px) {
     .ba { grid-template-columns: 1fr; gap: 10px; }
+    .ba-arrow2, .ba-ask { grid-column: auto; }
     .ba-arrow { width: 1px; height: 22px; justify-self: center; margin-top: 0; }
     .ba-arrow::after { right: auto; left: 50%; top: auto; bottom: -1px; transform: translateX(-50%); border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 7px solid var(--ink-4); border-bottom: 0; }
     .ba-before .file:nth-child(n) { transform: none; }
@@ -599,7 +613,7 @@
           <span>Listo en <b>5 semanas</b></span>
         </p>
       </div>
-      <figure class="hero-ba" aria-label="Hoy: siete archivos y un chat. En Tratto: un expediente por venta, de la cotización a la entrega.">
+      <figure class="hero-ba" aria-label="Hoy: siete archivos y un chat. En Tratto: un expediente por venta, de la cotización a la entrega. En WhatsApp: preguntas cuánto te deben y te contesta.">
         <div class="ba">
           <div class="ba-before">
             <span class="ba-lab">Hoy</span>
@@ -625,8 +639,20 @@
               <div class="opp-f">Última nota: Ángel, por WhatsApp, hoy 11:02 · "Cliente confirma 340 elementos"</div>
             </div>
           </div>
+          <div class="ba-arrow ba-arrow2" aria-hidden="true"></div>
+          <div class="ba-ask">
+            <span class="ba-lab">En WhatsApp</span>
+            <div class="wa ba-chat">
+              <div class="wa-head"><i></i><div><b>Tratto</b><small>en línea</small></div></div>
+              <div class="b out"><span class="q">¿Cuánto nos deben hoy?</span><small>18:02</small></div>
+              <div class="slot">
+                <div class="typing" aria-hidden="true"><i></i><i></i><i></i></div>
+                <div class="b in"><span class="r"><b>$1,284,500</b> por cobrar. Policía Estatal: anticipo cobrado, el resto vence el 30 nov.</span><small>18:02</small></div>
+              </div>
+            </div>
+          </div>
         </div>
-        <figcaption class="hero-ba-cap">Cualquiera del equipo lo abre y sabe en qué va.</figcaption>
+        <figcaption class="hero-ba-cap">Tu equipo lo abre y sabe en qué va. Tú le preguntas por WhatsApp.</figcaption>
       </figure>
     </div>
   </section>
@@ -945,6 +971,22 @@
     document.querySelectorAll('a[data-wa]').forEach(function (a) {
       a.href = a.href.replace(/wa\.me\/\d+/, 'wa.me/' + WA_NUMBER);
     });
+    // Anuncios: ?utm_content=a marca el mensaje prellenado para saber qué variante trajo el chat.
+    try {
+      var variante = new URLSearchParams(location.search).get('utm_content');
+      if (variante && /^[a-z0-9]{1,8}$/i.test(variante)) {
+        var texto = encodeURIComponent('Hola, vi su anuncio (' + variante.toUpperCase() + ') y quiero ver Tratto');
+        document.querySelectorAll('a[data-wa]').forEach(function (a) {
+          a.href = a.href.replace(/\?text=[^&]*/, '?text=' + texto);
+        });
+        // El chat del hero hace la misma pregunta que el anuncio B.
+        var chatHero = document.querySelector('.ba-chat');
+        if (chatHero && variante.toLowerCase() === 'b') {
+          chatHero.querySelector('.q').textContent = '¿Cuánto cotizamos esta semana?';
+          chatHero.querySelector('.r').innerHTML = '<b>$3,760,200</b> en 14 cotizaciones. Policía Estatal va en V2, en negociación.';
+        }
+      }
+    } catch (e) {}
     var reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
     // Demo de WhatsApp: la conversación se escribe sola y se repite.
@@ -1005,8 +1047,10 @@
       var rows = Array.prototype.slice.call(fig.querySelectorAll('.opp-r'));
       var head = fig.querySelector('.opp-h'), foot = fig.querySelector('.opp-f');
       var map = [0, 1, 1, 2, 3, 4, 5]; // archivo -> fila (los dos de cotización caen en la misma)
+      var chat = fig.querySelector('.ba-chat');
+      var pregunta = chat.querySelector('.b.out'), respuesta = chat.querySelector('.b.in'), typing = chat.querySelector('.typing');
       var timers = [], visible = false, running = false;
-      ba.classList.add('play');
+      ba.classList.add('play'); chat.classList.add('play');
       function at(ms, fn) { timers.push(setTimeout(fn, ms)); }
       function reset() {
         timers.forEach(clearTimeout); timers = [];
@@ -1014,7 +1058,8 @@
         files.forEach(function (f) { f.classList.remove('fly'); f.style.removeProperty('--dx'); f.style.removeProperty('--dy'); });
         rows.forEach(function (r) { r.classList.remove('show', 'hit'); });
         head.classList.remove('show'); foot.classList.remove('show');
-        ba.classList.remove('done', 'flying');
+        pregunta.classList.remove('show'); respuesta.classList.remove('show'); typing.classList.remove('show');
+        ba.classList.remove('done', 'flying', 'asking');
         void ba.offsetWidth;
         ba.classList.remove('snap');
       }
@@ -1036,7 +1081,12 @@
         files.forEach(function (_, i) { at(1000 + i * 620, function () { fly(i); }); });
         var end = 1000 + files.length * 620 + 300;
         at(end, function () { ba.classList.remove('flying'); foot.classList.add('show'); ba.classList.add('done'); });
-        at(end + 5000, function () { running = false; if (visible) run(); });
+        // Ya centralizado, el director pregunta por WhatsApp.
+        at(end + 700, function () { ba.classList.add('asking'); });
+        at(end + 1500, function () { pregunta.classList.add('show'); });
+        at(end + 2100, function () { typing.classList.add('show'); });
+        at(end + 3300, function () { typing.classList.remove('show'); respuesta.classList.add('show'); ba.classList.remove('asking'); });
+        at(end + 8300, function () { running = false; if (visible) run(); });
       }
       if ('IntersectionObserver' in window) {
         new IntersectionObserver(function (es) { visible = es[0].isIntersecting; if (visible && !running) run(); }, { threshold: 0.5 }).observe(fig);
