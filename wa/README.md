@@ -41,7 +41,9 @@ Quien sea → Meta Cloud API → POST https://wa.usetratto.com/wa/webhook
 | ✅ | Fotos/documentos/audios entrantes: se bajan a R2 al momento, se ven en la bandeja y van al portal como URL firmada (ver contrato) |
 | ⛔ | Falta crear el bucket `tratto-wa-media`, su regla de 90 días y aplicar `migrations/003_media.sql` en la D1 remota (comandos abajo) |
 | ⛔ | Falta el endpoint `/api/wa/inbound` en `janing-portal` (contrato abajo) |
-| ⛔ | Falta poblar `directory` con los teléfonos reales de Janing |
+| ✅ | `directory` con los 5 teléfonos de Janing (Efraín, Mafer, Silvana, Elías, Rodrigo) |
+| ✅ | Plantillas para cualquier cliente (`_v2` + `bienvenida_portal`), botón por `/ir/<tenant>/<ruta>` → `tenants.portal_url` (migración 004) — enviadas a revisión el 10 sep 2026 |
+| ⏳ | `janing-portal` pasa a las `_v2` cuando Meta las apruebe; después se pueden borrar las 7 viejas con "Janing" fijo |
 
 ## Setup en Meta (una vez)
 
@@ -120,9 +122,14 @@ secreto, misma firma, sentido contrario:
 // headers: x-tratto-signature: sha256=<HMAC-SHA256 del cuerpo con GATEWAY_SECRET>
 {
   "tenant": "janing", "phone": "5215554369433", "text": "…",
-  // opcional: plantilla aprobada por Meta, para cuando la ventana de 24 h está cerrada
-  "template": { "name": "cotizacion_verificar_pdf", "language": "es_MX", "header": "document",
-                "body": ["Elías", "OPP-0010", "Nave industrial"], "urlSuffix": "10" },
+  // opcional: plantilla aprobada por Meta, para cuando la ventana de 24 h está cerrada.
+  // El nombre del portal va como el ÚLTIMO body; urlSuffix = "<tenant>/<ruta>" (ver
+  // "Plantillas para cualquier cliente" abajo)
+  "template": { "name": "cotizacion_firmada_pdf_v2", "language": "es_MX", "header": "document",
+                "body": ["Ana", "OPP-0010", "Nave industrial", "Elías Guerrero", "Janing"],
+                "urlSuffix": "janing/oportunidades/10",
+                // opcional: payload de respuestas rápidas; "tratto:…" lo recibe el gateway
+                "quickReplies": [] },
   // opcional: un archivo (base64 dentro del JSON, así la firma lo cubre; máx. 20 MB)
   "media": { "filename": "Cotizacion-OPP-0010.pdf", "mime": "application/pdf", "base64": "JVBERi0…" }
 }
@@ -150,18 +157,41 @@ portal la mandó en `template` se usa esa (`body` son los `{{n}}` del cuerpo en 
 **Meta cobra** ese mensaje. Sin plantilla, el error de arriba. Un número sin hilo
 tiene que estar en `directory` del tenant; el destino se arma como `52` + 10 dígitos.
 
-Plantillas dadas de alta en la WABA (se crean por API, `POST
-/{WABA_ID}/message_templates`, y Meta las revisa — las de categoría *utility* suelen
-aprobarse en minutos u horas; se consultan con `GET
-/{WABA_ID}/message_templates?fields=name,status`):
+**Plantillas para cualquier cliente.** Se crean por API (`POST
+/{WABA_ID}/message_templates`) y Meta las revisa — las *utility* suelen aprobarse en
+minutos u horas; se consultan con `GET
+/{WABA_ID}/message_templates?fields=name,status,category`. Ninguna nombra a un
+cliente: dar de alta uno nuevo **no** requiere plantillas nuevas. Dos reglas:
 
-| nombre | cuerpo | botón |
+- **El nombre del portal va siempre como el ÚLTIMO `{{n}}` del cuerpo** ("…del
+  portal de {{4}}…"). El portal lo manda como un parámetro más.
+- **El botón de URL apunta a `https://wa.usetratto.com/ir/{{1}}`** con `{{1}}` =
+  `<tenant>/<ruta>` (p. ej. `janing/validacion/10`). Meta solo deja la variable al
+  final y con el dominio fijo; el gateway redirige (302) al `portal_url` de ese
+  tenant y nunca fuera de ese origen (`src/ir.ts`). `portal_url` se da de alta con
+  `POST /admin/tenants`.
+
+| nombre | cuerpo | botones |
 |---|---|---|
-| `cotizacion_verificar` | Hola {{1}}, se generó la cotización {{2}} ({{3}}) en el portal de Janing y necesita tu verificación. | `https://janing.usetratto.com/oportunidades/{{1}}` |
-| `mencion_actualizacion` | Tienes una mención de {{1}} en {{2}} (portal de Janing): "{{3}}". Ábrela para responder. | `https://janing.usetratto.com/{{1}}` |
-| `cotizacion_verificar_pdf` | **HEADER DOCUMENT** + Hola {{1}}, se generó la cotización {{2}} ({{3}}) … Va el PDF adjunto. | `https://janing.usetratto.com/oportunidades/{{1}}` |
-| `costeo_validar` | Hola {{1}}, el costeo de la cotización {{2}} ({{3}}) está listo y espera tu validación… | `https://janing.usetratto.com/validacion/{{1}}` |
-| `actividades_vencidas` | Hola {{1}}, tienes {{2}} actividad(es) vencida(s)… La más antigua: {{3}}. Ábrelas… | `https://janing.usetratto.com/inicio` |
+| `bienvenida_portal` | Hola {{1}}, este es el número de WhatsApp del portal de {{2}}. Por aquí te van a llegar los avisos del portal que te toquen… Guárdalo en tus contactos… | URL `ir/{{1}}` · QUICK_REPLY "Enterado" (índice 1; mandarlo con payload `tratto:enterado`). Meta no deja emojis en botones |
+| `cotizacion_validar_pdf_v2` | **HEADER DOCUMENT** + Hola {{1}}, la cotización {{2}} ({{3}}) del portal de {{4}} está EN VALIDACIÓN… contesta GO… o NO… | QUICK_REPLY "GO, fírmala" · "NO, regrésala" · URL `ir/{{1}}` (índice 2) |
+| `cotizacion_firmada_pdf_v2` | **HEADER DOCUMENT** + Hola {{1}}, la cotización {{2}} ({{3}}) ya está validada y firmada por {{4}} en el portal de {{5}}… | URL `ir/{{1}}` |
+| `costeo_validar_v2` | Hola {{1}}, el costeo de la cotización {{2}} ({{3}}) del portal de {{4}} está listo y espera tu validación. | URL `ir/{{1}}` |
+| `mencion_actualizacion_v2` | Tienes una mención de {{1}} en {{2}}: "{{3}}". Ábrela en el portal de {{4}} para responder. | URL `ir/{{1}}` |
+| `actividades_vencidas_v2` | Hola {{1}}, tienes {{2}} actividad(es) vencida(s) a tu nombre. La más antigua: {{3}}. Puedes verlas en el portal de {{4}}… | URL `ir/{{1}}` |
+
+Las de antes (`cotizacion_verificar`, `cotizacion_verificar_pdf`,
+`cotizacion_validar_pdf`, `cotizacion_firmada_pdf`, `costeo_validar`,
+`mencion_actualizacion`, `actividades_vencidas`) llevan "Janing" y
+`janing.usetratto.com` fijos. Siguen vivas mientras el portal de Janing no suba el
+cambio a las `_v2`; después se pueden borrar (un nombre borrado no se puede reusar
+en 30 días).
+
+**Respuestas rápidas con payload `tratto:…`** (campo `quickReplies` de la
+plantilla: `[{index, payload}]`) son para el gateway: quedan en bitácora con
+`dispatch=boton`, abren la ventana de 24 h y **no** se despachan al portal ni se
+contestan. Sin payload, Meta devuelve el texto del botón y el portal lo recibe como
+texto — así funciona "GO, fírmala".
 
 Una plantilla con encabezado de documento necesita un `header_handle` de ejemplo:
 se sube un PDF con la Resumable Upload API (`POST /{APP_ID}/uploads?file_name=…&
@@ -199,6 +229,10 @@ el mensaje llega así (`text` lleva el caption, si lo hubo):
   el portal es otro origen y el `fetch` funciona. Arriba de 10 MB va `null` siempre;
   si leer R2 falla también, queda `null` y al portal le queda la URL. La copia del gateway vive bajo `t/{tenant}/…` y una regla de ciclo de vida
   la borra a los **90 días**. Los leads (`lead/…`) se quedan: no tienen otro lugar.
+- **`sha256` es el que declara META, y viene en BASE64** (`"gkH/IeHhKvRM…="`), no en
+  hex: el gateway lo reenvía tal cual, no lo recalcula. Un portal que lo compare
+  contra el hex de los bytes va a creer que TODO archivo llegó corrupto — le pasó al
+  de Janing el 2026-09-10. Normaliza antes de comparar.
 - La firma cubre la key completa, prefijo de tenant incluido: un portal solo puede
   bajar lo que se le despachó a él. Los portales **nunca** ven el `WHATSAPP_TOKEN`.
 - Si Meta no deja bajar el archivo, el mensaje se despacha igual con `media: null`
@@ -251,9 +285,11 @@ propósito: se suelta solo, así que ningún hilo se queda mudo porque alguien o
 reactivarlo. *Tomar* / *Devolver* en la cabecera lo hacen sin escribir.
 
 **Ventana de 24 h.** WhatsApp solo permite texto libre dentro de las 24 h desde el
-último mensaje de la persona. Pasado eso el compositor se bloquea y el envío devuelve
-`409`: fuera de la ventana solo van plantillas aprobadas, y esta cuenta no tiene
-ninguna.
+último mensaje **que mandó la persona**. Se calcula en el servidor sobre los
+`messages` entrantes (`ops.ts` → `ABIERTA`, y la bandeja lo recibe como `abierta`):
+un hilo que abrió una plantilla nuestra no cuenta. Pasado eso el compositor se
+bloquea y el envío devuelve `409`: fuera de la ventana solo van plantillas
+aprobadas, y la bandeja todavía no las manda.
 
 **Detalles del contacto** (⋮ en el hilo): re-rutear a un cliente, o marcar el
 seguimiento del lead (`nuevo` · `contactado` · `descartado`).
@@ -293,7 +329,8 @@ B=https://wa.usetratto.com; H="Authorization: Bearer $ADMIN_TOKEN"
 
 # clientes
 curl -X POST $B/admin/tenants -H "$H" -H 'content-type: application/json' \
-  -d '{"slug":"janing","name":"Janing","inbound_url":"https://janing.usetratto.com/api/wa/inbound"}'
+  -d '{"slug":"janing","name":"Janing","inbound_url":"binding:JANING","portal_url":"https://janing.usetratto.com"}'
+# ojo: es un upsert que REEMPLAZA todo — manda también ack_text/portal_url si ya los tenía
 curl $B/admin/tenants -H "$H"
 
 # dar de alta teléfonos (acepta cualquier formato: +52 155 1111 2222, 5511112222…)
