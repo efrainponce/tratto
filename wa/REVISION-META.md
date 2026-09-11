@@ -14,6 +14,8 @@ Estado al 11 sep 2026: verificación de negocio aprobada según la API de revisi
   `whatsapp_business_management` + `whatsapp_business_messaging`). Cuando Meta apruebe, crear
   otra con vencimiento Never.
 - Facebook Login for Business → Client OAuth: dominio y redirect `https://portal.usetratto.com`.
+- Número de ventas de Tratto (el que se conecta por coexistencia): **+52 55 3866 2809**, en la app
+  WhatsApp Business del cel. No es el del gateway (+52 33 4942 4216).
 - Coexistencia: se activa en el código del botón con `featureType: 'whatsapp_business_app_onboarding'`;
   el Hosted Embedded Signup de Meta NO la soporta.
 
