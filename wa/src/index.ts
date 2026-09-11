@@ -18,6 +18,7 @@ import { archivoDe, sendPortal } from './ops';
 import { notify, type NotifyReason } from './notify';
 import { inboxRoutes } from './inbox';
 import { irAlPortal } from './ir';
+import { altaNumero, reenviar, separarPorNumero, type CuerpoMeta } from './reenvio';
 import { MEDIA_KINDS, serve as serveMedia, storeInbound, verifySignature, type MediaRef } from './media';
 
 const LEAD_REPLY =
@@ -243,8 +244,20 @@ export default {
       if (!(await validSignature(env, raw, req.headers.get('x-hub-signature-256')))) {
         return new Response('invalid signature', { status: 401 });
       }
-      let body: MetaBody;
-      try { body = JSON.parse(raw); } catch { return new Response('bad request', { status: 400 }); }
+      let todo: CuerpoMeta;
+      try { todo = JSON.parse(raw); } catch { return new Response('bad request', { status: 400 }); }
+
+      // Lo que entró a un número de portal (Embedded Signup, ver reenvio.ts) se
+      // le entrega entero a ese portal ANTES de acusar: si no lo acepta, 500 y
+      // Meta reintenta. El resto sigue el camino de siempre.
+      const { resto, lotes } = await separarPorNumero(env, todo);
+      for (const lote of lotes) {
+        try { await reenviar(env, lote); } catch (err) {
+          console.error('reenvio', err);
+          return new Response('portal no disponible', { status: 500 });
+        }
+      }
+      const body = resto as unknown as MetaBody;
 
       const messages = extract(body);
       if (messages.length > 0) {
@@ -265,6 +278,23 @@ export default {
         return new Response('forbidden', { status: 403 });
       }
       return serveMedia(env, key);
+    }
+
+    // Alta de un número de portal tras su Embedded Signup: {tenant,
+    // phone_number_id, waba_id} firmado con GATEWAY_SECRET. Desde ahí, lo que
+    // entre a ese número se le reenvía entero (reenvio.ts).
+    if (req.method === 'POST' && url.pathname === '/portal/numero') {
+      if (!env.GATEWAY_SECRET) return Response.json({ error: 'GATEWAY_SECRET sin configurar' }, { status: 500 });
+      const raw = await req.text();
+      const header = req.headers.get('x-tratto-signature') ?? '';
+      const expected = await hmacHex(env.GATEWAY_SECRET, raw);
+      if (!header.startsWith('sha256=') || !timingSafeEqual(expected, header.slice('sha256='.length).toLowerCase())) {
+        return Response.json({ error: 'firma inválida' }, { status: 401 });
+      }
+      let b: { tenant?: string; phone_number_id?: string; waba_id?: string };
+      try { b = JSON.parse(raw); } catch { return Response.json({ error: 'cuerpo no es JSON' }, { status: 400 }); }
+      const r = await altaNumero(env, b);
+      return Response.json(r.body, { status: r.status });
     }
 
     // Salida de un portal: {tenant, phone, text} firmado con GATEWAY_SECRET —

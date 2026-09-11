@@ -26,6 +26,16 @@ CREATE TABLE IF NOT EXISTS directory (
 );
 CREATE INDEX IF NOT EXISTS directory_tenant_idx ON directory(tenant_slug);
 
+-- Números de un portal (Embedded Signup): lo que entra a ellos se reenvía entero al
+-- portal dueño en vez de rutearse por teléfono. Ver src/reenvio.ts.
+CREATE TABLE IF NOT EXISTS numeros (
+  phone_number_id TEXT PRIMARY KEY,
+  tenant_slug     TEXT NOT NULL REFERENCES tenants(slug) ON DELETE CASCADE,
+  waba_id         TEXT,
+  created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS numeros_waba_idx ON numeros(waba_id);
+
 -- Un hilo por número. Guarda el ruteo PEGAJOSO: una vez que un número quedó ligado a
 -- un cliente, se queda ahí aunque no esté en el directorio (así un lead que se
 -- convierte en cliente, o alguien dado de alta a mano, no se re-rutea solo).

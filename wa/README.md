@@ -111,6 +111,32 @@ Para conectar Janing: implementar `POST /api/wa/inbound` en `janing-portal`
 (resolver la persona por `phone`, correr su agente contra su D1, devolver `reply`) y
 luego apuntar el tenant a esa URL.
 
+### Números de un portal (Embedded Signup) — `numeros` y `/wa/eventos`
+
+Un portal puede conectar su **propio** número a la app de Meta de Tratto por Embedded
+Signup (el primero: el de ventas de Tratto en `portal.usetratto.com`, en coexistencia con
+la app WhatsApp Business del cel). Meta tiene una sola callback por app, así que eso
+también llega a `/wa/webhook`. Antes de todo lo demás, `reenvio.ts` separa los cambios
+cuyo `metadata.phone_number_id` (o, si no traen número, cuyo WABA `entry.id`) está en
+`numeros` y los entrega **enteros** al portal dueño:
+
+```jsonc
+// POST {portal_url}/wa/eventos por service binding (inbound_url = "binding:PORTAL")
+// headers: x-tratto-signature: sha256=<HMAC-SHA256 del cuerpo con GATEWAY_SECRET>
+{ "source": "tratto-wa", "tenant": "tratto",
+  "changes": [{ "waba_id": "…", "field": "messages" | "smb_message_echoes" | "history" | "smb_app_state_sync" | …, "value": { …tal cual de Meta… } }] }
+```
+
+Si el portal no contesta 2xx, el webhook responde **500 y Meta reintenta** (el portal
+descarta repetidos por id de mensaje). Esos mensajes no tocan `threads`/`messages` ni
+reciben acuse: el portal los guarda y contesta con su propio token. Si la consulta a
+`numeros` truena, todo sigue el camino normal: el reenvío nunca tumba al número del gateway.
+
+El portal da de alta su número al terminar el signup con `POST /portal/numero`
+`{tenant, phone_number_id, waba_id}`, firmado igual. Migración `005_numeros.sql` (crea la
+tabla y el tenant `tratto`). En la app de Meta hay que suscribir además los campos
+`history`, `smb_app_state_sync` y `smb_message_echoes`.
+
 ### Portal → persona (`POST /portal/send`)
 
 El camino de regreso cuando el portal quiere escribir **por su cuenta**, sin que la

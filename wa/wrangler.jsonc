@@ -32,7 +32,12 @@
   // HTTP público: la llamada va Worker→Worker y no pasa por Cloudflare Access
   // (que protege el hostname del portal y no puede autenticar al gateway). El
   // tenant lo pide con inbound_url = "binding:JANING". Ver routing.ts.
-  "services": [{ "binding": "JANING", "service": "janing-portal" }],
+  // PORTAL = portal.usetratto.com: recibe entero lo que entra al número de ventas
+  // que conectó por Embedded Signup (tabla `numeros`, src/reenvio.ts).
+  "services": [
+    { "binding": "JANING", "service": "janing-portal" },
+    { "binding": "PORTAL", "service": "tratto-portal" }
+  ],
   "vars": {
     "ENVIRONMENT": "prod",
     "PUBLIC_URL": "https://wa.usetratto.com",
