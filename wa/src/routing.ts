@@ -21,18 +21,22 @@ export interface Tenant {
   name: string;
   inbound_url: string | null;
   ack_text: string | null;
+  agente?: boolean;          // false = el portal no contesta mensajes (tenants.agente = 0)
 }
 
 export interface Resolution {
   phone10: string;
   tenant: Tenant | null;             // null = lead
-  resolvedBy: 'directory' | 'sticky' | 'lead';
+  resolvedBy: 'manual' | 'directory' | 'sticky' | 'lead';
   contactName: string | null;
   contactRole: string | null;
 }
 
 /**
  * Orden de resolución, de más fuerte a más débil:
+ *   0. `destino_manual` — el cliente que ese número eligió con "/janing",
+ *      "/tratto"… (ver cambio.ts). Se salta con `manual: false`: la respuesta a
+ *      un botón de plantilla es del portal que la mandó, no del elegido.
  *   1. `directory` — el número está dado de alta con su cliente. Manda siempre:
  *      si a alguien lo movieron de cliente, el directorio corrige el hilo viejo.
  *   2. `threads` (pegajoso) — ya habíamos ligado ese número a un cliente antes
@@ -44,11 +48,36 @@ export interface Resolution {
  * la whitelist es alguien que no debería operar el sistema; aquí un número
  * desconocido es justo lo que queremos capturar.
  */
-export async function resolve(env: Env, msg: Incoming): Promise<Resolution> {
+export async function resolve(env: Env, msg: Incoming, opts: { manual?: boolean } = {}): Promise<Resolution> {
   const p10 = phone10(msg.from);
 
+  if (opts.manual !== false) {
+    const man = await env.DB.prepare(
+      `SELECT t.slug, t.name AS tenant_name, t.inbound_url, t.ack_text, t.agente, d.name, d.role
+         FROM destino_manual dm
+         JOIN tenants t ON t.slug = dm.tenant_slug AND t.active = 1
+         LEFT JOIN directory d ON d.phone10 = dm.phone10
+        WHERE dm.phone10 = ?`,
+    ).bind(p10).first<Record<string, string | null>>();
+    if (man) {
+      return {
+        phone10: p10,
+        tenant: {
+          slug: man.slug as string,
+          name: man.tenant_name as string,
+          inbound_url: man.inbound_url,
+          ack_text: man.ack_text,
+          agente: Number(man.agente) !== 0,
+        },
+        resolvedBy: 'manual',
+        contactName: man.name,
+        contactRole: man.role,
+      };
+    }
+  }
+
   const dir = await env.DB.prepare(
-    `SELECT d.tenant_slug, d.name, d.role, t.slug, t.name AS tenant_name, t.inbound_url, t.ack_text
+    `SELECT d.tenant_slug, d.name, d.role, t.slug, t.name AS tenant_name, t.inbound_url, t.ack_text, t.agente
        FROM directory d
        JOIN tenants t ON t.slug = d.tenant_slug AND t.active = 1
       WHERE d.phone10 = ?`,
@@ -62,6 +91,7 @@ export async function resolve(env: Env, msg: Incoming): Promise<Resolution> {
         name: dir.tenant_name as string,
         inbound_url: dir.inbound_url,
         ack_text: dir.ack_text,
+        agente: Number(dir.agente) !== 0,
       },
       resolvedBy: 'directory',
       contactName: dir.name,
@@ -70,7 +100,7 @@ export async function resolve(env: Env, msg: Incoming): Promise<Resolution> {
   }
 
   const sticky = await env.DB.prepare(
-    `SELECT t.slug, t.name AS tenant_name, t.inbound_url, t.ack_text
+    `SELECT t.slug, t.name AS tenant_name, t.inbound_url, t.ack_text, t.agente
        FROM threads th
        JOIN tenants t ON t.slug = th.tenant_slug AND t.active = 1
       WHERE th.phone10 = ?`,
@@ -84,6 +114,7 @@ export async function resolve(env: Env, msg: Incoming): Promise<Resolution> {
         name: sticky.tenant_name as string,
         inbound_url: sticky.inbound_url,
         ack_text: sticky.ack_text,
+        agente: Number(sticky.agente) !== 0,
       },
       resolvedBy: 'sticky',
       contactName: null,
@@ -225,7 +256,9 @@ export async function dispatchToTenant(
 ): Promise<DispatchResult> {
   const tenant = r.tenant;
   if (!tenant) return { status: 'lead', reply: null, sends: [] };
-  if (!tenant.inbound_url) {
+  // Sin agente (tenants.agente = 0; hoy tratto-portal, al que solo se llega con
+  // "/tratto"): no hay a quién despacharle; queda en /inbox igual que sin URL.
+  if (!tenant.inbound_url || tenant.agente === false) {
     return { status: 'no_handler', reply: tenant.ack_text, sends: [] };
   }
 

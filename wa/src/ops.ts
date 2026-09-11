@@ -4,6 +4,7 @@
 import type { Env } from './env';
 import { phone10, sendDocument, sendTemplate, sendText, uploadMedia, type Archivo, type Plantilla } from './wa';
 import { logOutbound } from './routing';
+import { destinoManual } from './cambio';
 
 export interface Result { status: number; body: Record<string, unknown> | unknown[] }
 
@@ -127,10 +128,13 @@ export async function sendPortal(
   ).bind(p10).first<{ wa_from: string; tenant_slug: string | null; abierto: number }>();
 
   // El número tiene que ser de ESE cliente: por directorio, o porque su hilo ya
-  // quedó ruteado ahí. Un portal jamás le escribe a la gente de otro.
+  // quedó ruteado ahí. Un portal jamás le escribe a la gente de otro. Quien cambia
+  // de cliente por comando (cambio.ts) es de los dos: el del directorio le sigue
+  // avisando y el elegido le puede contestar.
   const dir = await env.DB.prepare(`SELECT tenant_slug FROM directory WHERE phone10 = ?`)
     .bind(p10).first<{ tenant_slug: string }>();
-  const suyo = dir ? dir.tenant_slug === tenant : th?.tenant_slug === tenant;
+  const suyo = (dir ? dir.tenant_slug === tenant : th?.tenant_slug === tenant)
+    || (await destinoManual(env, p10)) === tenant;
   if (!suyo) return fail(403, 'ese número no pertenece a este cliente');
 
   const abierto = !!th?.abierto;

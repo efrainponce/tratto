@@ -67,6 +67,15 @@ Todos los comandos de wrangler aquí van con
 
 En orden, de más fuerte a más débil (`routing.ts::resolve`):
 
+0. **`destino_manual`** — solo para quien es usuario en varios portales (Efraín):
+   escribe `/janing` o `/tratto` y lo que mande después va a ese portal hasta que lo
+   cambie; `/` solo le dice dónde está. Tener fila en la tabla es el permiso (se da de
+   alta a mano, ver `migrations/006_destino_manual.sql`); para cualquier otro número
+   `/algo` es un mensaje normal. El directorio no se toca, así que el portal de ahí le
+   sigue mandando avisos, y la respuesta a un botón de plantilla va a ese portal, no
+   al elegido. Un cliente con `tenants.agente = 0` (hoy `tratto`: su portal no tiene
+   `POST /api/wa/inbound`) no recibe despacho: el mensaje queda en `/inbox` como
+   `no_handler`. Ver `src/cambio.ts`.
 1. **`directory`** — el teléfono está dado de alta con su cliente. Manda siempre: si
    movieron a alguien de cliente, el directorio corrige el hilo viejo.
 2. **`threads` (pegajoso)** — ese número ya había quedado ligado a un cliente antes

@@ -19,6 +19,7 @@ import { notify, type NotifyReason } from './notify';
 import { inboxRoutes } from './inbox';
 import { irAlPortal } from './ir';
 import { altaNumero, reenviar, separarPorNumero, type CuerpoMeta } from './reenvio';
+import { atenderComando } from './cambio';
 import { MEDIA_KINDS, serve as serveMedia, storeInbound, verifySignature, type MediaRef } from './media';
 
 const LEAD_REPLY =
@@ -109,10 +110,15 @@ function extract(body: MetaBody): Incoming[] {
 
 async function processMessage(env: Env, msg: Incoming): Promise<void> {
   if (await alreadyProcessed(env, msg.waId)) return;
-
-  const r = await resolve(env, msg);
-  const thread = await touchThread(env, msg, r);
   await markRead(env, msg.waId);
+
+  // "/janing", "/tratto"… de quien puede cambiar de cliente (cambio.ts).
+  if (await atenderComando(env, msg)) return;
+
+  // Un botón de plantilla contesta a la plantilla: va al portal que la mandó
+  // (el del directorio), no al que el número eligió por comando.
+  const r = await resolve(env, msg, { manual: (msg.raw as MetaMessage).type !== 'button' });
+  const thread = await touchThread(env, msg, r);
 
   // Relevo humano: si alguien tomó el hilo a mano y sigue vigente, el agente se
   // calla. Contestar los dos es peor que no contestar ninguno.

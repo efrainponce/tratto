@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS tenants (
   inbound_url TEXT,
   ack_text    TEXT,                                   -- acuse mientras no haya inbound_url
   portal_url  TEXT,                                   -- base del portal: destino de /ir/<slug>/… (src/ir.ts)
+  agente      INTEGER NOT NULL DEFAULT 1,             -- 0 = el portal no contesta mensajes: no se despacha
   active      INTEGER NOT NULL DEFAULT 1,
   created_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -25,6 +26,14 @@ CREATE TABLE IF NOT EXISTS directory (
   updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS directory_tenant_idx ON directory(tenant_slug);
+
+-- Números que cambian de cliente por comando ("/janing", "/tratto"). Tener fila aquí
+-- es el permiso, y manda sobre el directorio al rutear. Ver src/cambio.ts.
+CREATE TABLE IF NOT EXISTS destino_manual (
+  phone10     TEXT PRIMARY KEY,
+  tenant_slug TEXT NOT NULL REFERENCES tenants(slug) ON DELETE CASCADE,
+  updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
 
 -- Números de un portal (Embedded Signup): lo que entra a ellos se reenvía entero al
 -- portal dueño en vez de rutearse por teléfono. Ver src/reenvio.ts.
