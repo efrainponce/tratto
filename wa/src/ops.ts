@@ -11,9 +11,17 @@ const ok = (body: Record<string, unknown> | unknown[] = { ok: true }): Result =>
 const fail = (status: number, error: string, detalle?: string): Result =>
   ({ status, body: detalle ? { error, detalle } : { error } });
 
+// La ventana de 24 h de Meta se cuenta desde el último mensaje QUE MANDÓ LA
+// PERSONA, no desde la última actividad del hilo: sendPortal crea el hilo al
+// mandarle una plantilla a alguien que nunca ha escrito, y con `last_seen` la
+// ventana saldría abierta y el texto libre rebotaría en Meta (#131047).
+const ABIERTA = `EXISTS (SELECT 1 FROM messages m WHERE m.phone10 = t.phone10 AND m.direction = 'in'
+                   AND m.created_at > datetime('now','-24 hours'))`;
+
 const THREAD_COLS = `
   t.phone10, t.wa_from, t.tenant_slug, t.resolved_by, t.profile_name, t.lead_status,
   t.needs_review, t.msg_count, t.human_until, t.human_by, t.first_seen, t.last_seen,
+  ${ABIERTA} AS abierta,
   (SELECT m.direction FROM messages m WHERE m.phone10 = t.phone10 ORDER BY m.id DESC LIMIT 1) AS last_direction,
   (SELECT COALESCE(m.body, m.media_name, '(' || m.kind || ')') FROM messages m WHERE m.phone10 = t.phone10 ORDER BY m.id DESC LIMIT 1) AS last_body`;
 
@@ -63,14 +71,14 @@ export async function sendHuman(
   if (!th) return fail(404, 'ese número nunca ha escrito');
 
   // Meta solo deja texto libre dentro de las 24 h desde el último mensaje de la
-  // persona. Fuera de eso hay que usar plantilla aprobada, y no tenemos ninguna.
+  // persona. Fuera de eso solo van plantillas aprobadas, y la bandeja no las manda.
   const open = await env.DB.prepare(
-    `SELECT 1 AS yes FROM threads WHERE phone10 = ? AND last_seen > datetime('now','-24 hours')`,
+    `SELECT 1 AS yes FROM threads t WHERE t.phone10 = ? AND ${ABIERTA}`,
   ).bind(p10).first();
   if (!open) {
     return fail(409, 'ventana de 24 h cerrada',
-      'La persona no escribe desde hace más de 24 h. WhatsApp solo permite plantillas ' +
-      'aprobadas fuera de esa ventana, y esta cuenta no tiene ninguna.');
+      'La persona no nos ha escrito en las últimas 24 h. Fuera de esa ventana WhatsApp solo ' +
+      'permite plantillas aprobadas, y la bandeja todavía no las manda.');
   }
 
   try {
@@ -115,7 +123,7 @@ export async function sendPortal(
   if (!t || !t.active) return fail(403, 'tenant desconocido o inactivo');
 
   const th = await env.DB.prepare(
-    `SELECT wa_from, tenant_slug, last_seen > datetime('now','-24 hours') AS abierto FROM threads WHERE phone10 = ?`,
+    `SELECT t.wa_from, t.tenant_slug, ${ABIERTA} AS abierto FROM threads t WHERE t.phone10 = ?`,
   ).bind(p10).first<{ wa_from: string; tenant_slug: string | null; abierto: number }>();
 
   // El número tiene que ser de ESE cliente: por directorio, o porque su hilo ya
@@ -129,7 +137,7 @@ export async function sendPortal(
   if (!abierto && !tpl) {
     return th
       ? fail(409, 'ventana de 24 h cerrada',
-          'La persona no escribe desde hace más de 24 h. WhatsApp solo permite plantillas ' +
+          'La persona no nos ha escrito en las últimas 24 h. WhatsApp solo permite plantillas ' +
           'aprobadas fuera de esa ventana.')
       : fail(404, 'ese número nunca ha escrito',
           'WhatsApp solo deja escribirle a quien nos escribió primero (y hace menos de 24 h), ' +

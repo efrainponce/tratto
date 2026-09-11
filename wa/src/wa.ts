@@ -55,6 +55,10 @@ export interface Plantilla {
   /** Posición del botón de URL entre TODOS los botones de la plantilla (los
    *  QUICK_REPLY cuentan). 0 por omisión. */
   urlIndex?: number;
+  /** Payload de botones QUICK_REPLY, por su posición entre todos los botones.
+   *  Sin esto Meta devuelve como payload el texto del botón. Un payload
+   *  "tratto:…" lo recibe el gateway y no llega al portal (ver index.ts). */
+  quickReplies?: Array<{ index: number; payload: string }>;
 }
 
 /** Un archivo para mandar: los bytes se suben a Meta (`/media`) y el id
@@ -106,6 +110,9 @@ export async function sendTemplate(env: Env, to: string, t: Plantilla, headerDoc
   }
   if (t.urlSuffix) {
     components.push({ type: 'button', sub_type: 'url', index: String(t.urlIndex ?? 0), parameters: [{ type: 'text', text: t.urlSuffix }] });
+  }
+  for (const q of t.quickReplies ?? []) {
+    components.push({ type: 'button', sub_type: 'quick_reply', index: String(q.index), parameters: [{ type: 'payload', payload: q.payload }] });
   }
   await graphPost(env, {
     to: normalizeMxTo(to), type: 'template',

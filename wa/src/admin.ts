@@ -19,19 +19,25 @@ export async function adminRoutes(req: Request, env: Env, url: URL): Promise<Res
   const path = url.pathname;
 
   // Alta/edición de cliente.
-  //   POST /admin/tenants {slug, name, inbound_url?, ack_text?, active?}
+  //   POST /admin/tenants {slug, name, inbound_url?, ack_text?, portal_url?, active?}
+  //   portal_url = base del portal (https://janing.usetratto.com): a donde llevan
+  //   los botones de plantilla /ir/<slug>/… (ver ir.ts).
   if (req.method === 'POST' && path === '/admin/tenants') {
     const b = await req.json<{
-      slug: string; name: string; inbound_url?: string; ack_text?: string; active?: boolean;
+      slug: string; name: string; inbound_url?: string; ack_text?: string; portal_url?: string; active?: boolean;
     }>();
     if (!b.slug || !b.name) return Response.json({ error: 'slug y name requeridos' }, { status: 400 });
+    if (!/^[a-z0-9-]+$/.test(b.slug)) return Response.json({ error: 'slug: solo minúsculas, números y guiones' }, { status: 400 });
+    if (b.portal_url && !/^https:\/\/[^/\s]+\/?$/.test(b.portal_url)) {
+      return Response.json({ error: 'portal_url: https://dominio, sin ruta' }, { status: 400 });
+    }
     await env.DB.prepare(
-      `INSERT INTO tenants (slug, name, inbound_url, ack_text, active)
-       VALUES (?1, ?2, ?3, ?4, ?5)
+      `INSERT INTO tenants (slug, name, inbound_url, ack_text, portal_url, active)
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6)
        ON CONFLICT(slug) DO UPDATE SET
          name = excluded.name, inbound_url = excluded.inbound_url,
-         ack_text = excluded.ack_text, active = excluded.active`,
-    ).bind(b.slug, b.name, b.inbound_url ?? null, b.ack_text ?? null, b.active === false ? 0 : 1).run();
+         ack_text = excluded.ack_text, portal_url = excluded.portal_url, active = excluded.active`,
+    ).bind(b.slug, b.name, b.inbound_url ?? null, b.ack_text ?? null, b.portal_url?.replace(/\/$/, '') ?? null, b.active === false ? 0 : 1).run();
     return Response.json({ ok: true });
   }
 

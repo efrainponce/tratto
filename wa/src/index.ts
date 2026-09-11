@@ -17,6 +17,7 @@ import { adminRoutes } from './admin';
 import { archivoDe, sendPortal } from './ops';
 import { notify, type NotifyReason } from './notify';
 import { inboxRoutes } from './inbox';
+import { irAlPortal } from './ir';
 import { MEDIA_KINDS, serve as serveMedia, storeInbound, verifySignature, type MediaRef } from './media';
 
 const LEAD_REPLY =
@@ -138,10 +139,19 @@ async function processMessage(env: Env, msg: Incoming): Promise<void> {
     }
   }
 
+  // Botón de respuesta rápida que mandamos con payload "tratto:…" (el
+  // "Enterado" de la bienvenida): es para el gateway, no para el agente del
+  // portal —que lo tomaría como un mensaje suyo y contestaría cualquier cosa—.
+  // Queda en bitácora y abre la ventana de 24 h; no se despacha ni se contesta.
+  const acuse = ((msg.raw as MetaMessage).button?.payload ?? '').startsWith('tratto:');
+
   if (humanHasIt) {
     status = 'humano';
     reply = null;
     author = 'human';
+  } else if (acuse) {
+    status = 'boton';
+    reply = null;
   } else if (r.tenant) {
     try {
       const d = await dispatchToTenant(env, msg, r);
@@ -279,6 +289,11 @@ export default {
       }
       const r = await sendPortal(env, { tenant: b.tenant ?? '', phone: b.phone ?? '', text: b.text ?? '', template: b.template ?? null, archivo });
       return Response.json(r.body, { status: r.status });
+    }
+
+    // Botones de plantilla → portal del cliente (/ir/<tenant>/<ruta>). Ver ir.ts.
+    if ((req.method === 'GET' || req.method === 'HEAD') && url.pathname.startsWith('/ir/')) {
+      return irAlPortal(env, url);
     }
 
     if (url.pathname.startsWith('/admin/')) return adminRoutes(req, env, url);

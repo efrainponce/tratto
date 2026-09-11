@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS tenants (
   name        TEXT NOT NULL,
   inbound_url TEXT,
   ack_text    TEXT,                                   -- acuse mientras no haya inbound_url
+  portal_url  TEXT,                                   -- base del portal: destino de /ir/<slug>/… (src/ir.ts)
   active      INTEGER NOT NULL DEFAULT 1,
   created_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );

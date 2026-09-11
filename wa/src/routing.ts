@@ -1,7 +1,7 @@
 // El corazón del gateway: de un número suelto a "esto es de Janing" (o "esto es un lead").
 import type { Env } from './env';
 import { hmacHex } from './crypto';
-import { phone10 } from './wa';
+import { phone10, type Plantilla } from './wa';
 import { signedUrl, type MediaRef, type StoredMedia } from './media';
 
 export interface Incoming {
@@ -186,7 +186,7 @@ export async function alreadyProcessed(env: Env, waId: string): Promise<boolean>
  *  que le llegó por service binding (recursión → 522). */
 export interface EnvioPortal {
   phone: string; text: string;
-  template?: { name: string; language?: string; body?: string[]; urlSuffix?: string | null; header?: 'document' | null; urlIndex?: number } | null;
+  template?: Plantilla | null;
   media?: { filename?: string; mime?: string; base64?: string } | null;
 }
 export interface DispatchResult { status: string; reply: string | null; sends: EnvioPortal[] }

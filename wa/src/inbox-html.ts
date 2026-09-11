@@ -313,7 +313,9 @@ export function inboxPage(): string {
       '<span class="n">' + esc(name) + '<small>' + kb(m.media_size) + '</small></span></a>';
   }
   function isPending(t) { return t.last_direction === 'in' && (!t.tenant_slug || humanActive(t)); }
-  function stale(t) { var d = utc(t.last_seen); return !d || (Date.now() - d.getTime()) > 24 * 3600 * 1000; }
+  // La ventana la calcula el servidor (ops.ts, ABIERTA): cuenta solo lo que la
+  // persona mandó, no un hilo que abrió una plantilla nuestra.
+  function stale(t) { return !t.abierta; }
 
   var toastTimer;
   function toast(msg) {
@@ -488,7 +490,7 @@ export function inboxPage(): string {
       if (stale(t)) {
         ta.disabled = btn.disabled = true; ta.placeholder = 'Ventana cerrada';
         note.hidden = false;
-        note.textContent = 'Hace más de 24 h que esta persona no escribe. WhatsApp solo permite responder con plantillas aprobadas, y no hay ninguna. Espera a que escriba de nuevo.';
+        note.textContent = 'Esta persona no ha escrito en las últimas 24 h. Fuera de esa ventana WhatsApp solo permite plantillas aprobadas, y la bandeja todavía no las manda. Espera a que escriba de nuevo.';
       } else {
         ta.disabled = btn.disabled = false; ta.placeholder = 'Escribe un mensaje'; note.hidden = true;
       }
