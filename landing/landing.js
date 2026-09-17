@@ -84,6 +84,49 @@ demo.querySelectorAll("[data-ask], [data-metric]").forEach((button) => {
   );
 });
 
+// Meta ads: ?utm_content=a|b says which ad variant brought the visit.
+const adParam = new URLSearchParams(location.search).get("utm_content");
+const adVariant =
+  adParam && /^[a-z0-9]{1,8}$/i.test(adParam) ? adParam.toLowerCase() : null;
+const whatsappLinks = document.querySelectorAll('a[href^="https://wa.me/"]');
+if (adVariant) {
+  // The prefilled message tells us which ad started the chat.
+  const text = encodeURIComponent(
+    `Hola, vi su anuncio (${adVariant.toUpperCase()}) y quiero ver Tratto`,
+  );
+  whatsappLinks.forEach((link) => {
+    link.href = link.href.replace(/\?text=[^&]*/, `?text=${text}`);
+  });
+  // The demo chat opens with the same question as the ad.
+  if (adVariant === "a") {
+    examples.cobros.question = "¿Cuánto nos deben hoy?";
+    selectQuestion("cobros");
+  } else if (adVariant === "b") {
+    examples.cotizado = {
+      question: "¿Cuánto cotizamos esta semana?",
+      intro: "Esta semana cotizaste",
+      amount: "$3,760,200",
+      detail: "en 14 cotizaciones. 5 siguen sin respuesta.",
+      title: "Cotizado por cliente",
+      caption: "14 cotizaciones · esta semana",
+      shares: [50, 32, 18],
+      rows: [
+        ["Grupo Norte", "$1,880,100", "50%"],
+        ["Comercial del Valle", "$1,203,264", "32%"],
+        ["Otros clientes", "$676,836", "18%"],
+      ],
+    };
+    selectQuestion("cotizado");
+  }
+}
+// Meta Pixel: tapping any WhatsApp button counts as Contact, tagged with the ad variant.
+whatsappLinks.forEach((link) =>
+  link.addEventListener("click", () => {
+    if (window.fbq)
+      fbq("track", "Contact", { content_name: adVariant || "directo" });
+  }),
+);
+
 const steps = [
   {
     label: "01 / COSTEAR",
