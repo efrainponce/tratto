@@ -1,17 +1,4 @@
-// Meta Pixel + Umami: tapping any WhatsApp button counts as a contact, tagged with the ad variant
-// and the section the button lives in (hero, closing, footer...).
-whatsappLinks.forEach((link) =>
-  link.addEventListener("click", () => {
-    const variant = adVariant || "directo";
-    if (window.fbq) fbq("track", "Contact", { content_name: variant });
-    if (window.umami) {
-      const block = link.closest("section, header, footer, nav");
-      const section =
-        block?.id || block?.className.split(" ")[0] || block?.tagName.toLowerCase() || "page";
-      umami.track("whatsapp", { variant, section });
-    }
-  }),
-);"use strict";
+"use strict";
 
 // All demonstrations use illustrative data. No message is sent from this page.
 const examples = {
