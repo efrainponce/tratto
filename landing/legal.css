@@ -1,3 +1,4 @@
+@font-face{font-family:Inter;src:url("assets/inter-variable.woff2") format("woff2");font-style:normal;font-weight:100 900;font-display:swap}
 :root { --bg: #f7f4ee; --bg-raised: #fff; --bg-sunken: #efeae0; --border: #e2ded3; --ink: #2b2925; --ink-2: #726d61; --ink-3: #918b7c; --accent: #1f4d3f; --accent-ink: #fff; }
 @media (prefers-color-scheme: dark) { :root { --bg: #161412; --bg-raised: #1f1c18; --bg-sunken: #121009; --border: #2f2a24; --ink: #efe9dd; --ink-2: #aaa294; --ink-3: #7f786c; --accent: #8cc4a8; --accent-ink: #10201a; } }
 *, *::before, *::after { box-sizing: border-box; }
@@ -31,3 +32,11 @@ strong { color: var(--ink); font-weight: 600; }
 .legal-links a:hover { color: var(--ink); text-decoration: underline; }
 .legal-links a[aria-current] { color: var(--ink); font-weight: 600; }
 code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px; background: var(--bg-sunken); padding: 2px 6px; border-radius: 4px; color: var(--ink); }
+
+/* Shared mineral/forest identity. Legal content stays in its original documents. */
+:root{color-scheme:light;--bg:#e7ebed;--bg-raised:#f6f8f6;--bg-sunken:#dce5e0;--border:#cdd6d2;--ink:#263b32;--ink-2:#58685f;--ink-3:#637568;--accent:#305345;--accent-ink:#f1f5ef}
+.nav{background:var(--accent);color:var(--accent-ink)}
+.brand-mark{background:none;border-radius:0;filter:brightness(0) invert(1)}
+.brand-word,h1,h2{font-family:Inter,system-ui,sans-serif}
+.brand-word{font-size:25px;letter-spacing:-1.2px}.back{color:#dfebe0}.back:hover{color:white}
+a:focus-visible{outline:3px solid #6b9275;outline-offset:4px}
