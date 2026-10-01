@@ -1,0 +1,8 @@
+/assets/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/landing.css
+  Cache-Control: public, max-age=0, must-revalidate
+
+/landing.js
+  Cache-Control: public, max-age=0, must-revalidate

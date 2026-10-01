@@ -34,6 +34,31 @@
   .cta { margin-top: auto; display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
   .cta p { font: 700 50px/1.08 'Familjen Grotesk', sans-serif; letter-spacing: -0.02em; color: var(--accent); }
   .cta span { font-size: 24px; color: var(--ink-2); white-space: nowrap; padding-bottom: 8px; }
+
+  /* ?f=vertical → 1080×1920 (Stories/Reels). Arriba ~270 px y abajo ~420 px los tapa la interfaz: ahí no va nada clave. */
+  html.vertical, html.vertical body { height: 1920px; }
+  html.vertical body { padding: 280px 88px 420px; }
+  html.vertical h1 { font-size: 104px; margin-top: 72px; }
+  html.vertical .chat { margin-top: auto; }
+
+  /* ?f=horizontal → 1200×628 (1.91:1): pregunta a la izquierda, chat a la derecha. */
+  html.horizontal, html.horizontal body { width: 1200px; height: 628px; }
+  html.horizontal body { display: grid; grid-template-columns: 1fr 480px; grid-template-rows: auto 1fr auto; column-gap: 48px; padding: 48px 56px; }
+  html.horizontal .brand { grid-area: 1 / 1; gap: 12px; }
+  html.horizontal .brand .mark { width: 40px; height: 40px; border-radius: 10px; font-size: 24px; }
+  html.horizontal .word { font-size: 28px; }
+  html.horizontal h1 { grid-area: 2 / 1; align-self: center; font-size: 64px; margin: 0; }
+  html.horizontal .cta { grid-area: 3 / 1; margin: 0; }
+  html.horizontal .cta p { font-size: 32px; }
+  html.horizontal .cta span { display: none; }
+  html.horizontal .chat { grid-column: 2; grid-row: 1 / span 3; align-self: center; margin: 0; border-radius: 22px; }
+  html.horizontal .chat-head { padding: 16px 22px; gap: 14px; }
+  html.horizontal .chat-head .mark { width: 42px; height: 42px; font-size: 22px; }
+  html.horizontal .chat-head b { font-size: 21px; }
+  html.horizontal .chat-head small { font-size: 16px; }
+  html.horizontal .msgs { padding: 22px 20px 24px; gap: 14px; }
+  html.horizontal .b { font-size: 21px; padding: 13px 17px 10px; border-radius: 15px; }
+  html.horizontal .b .t { font-size: 14px; }
 </style>
 </head>
 <body>
@@ -61,7 +86,9 @@
       respuesta: '<strong>$3,760,200</strong> en 14 cotizaciones. 5 siguen sin respuesta del cliente; la más grande es de <strong>$980,000</strong>. ¿Te mando la lista?'
     }
   };
-  var v = V[new URLSearchParams(location.search).get('v')] || V.a;
+  var params = new URLSearchParams(location.search);
+  var v = V[params.get('v')] || V.a;
+  if (/^(vertical|horizontal)$/.test(params.get('f'))) document.documentElement.classList.add(params.get('f'));
   document.getElementById('q').textContent = v.q;
   document.getElementById('pregunta').textContent = v.pregunta;
   document.getElementById('respuesta').innerHTML = v.respuesta;
