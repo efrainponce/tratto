@@ -36,6 +36,7 @@
   // que conectó por Embedded Signup (tabla `numeros`, src/reenvio.ts).
   "services": [
     { "binding": "JANING", "service": "janing-portal" },
+    { "binding": "HERBERAS", "service": "herberas-portal" },
     { "binding": "PORTAL", "service": "tratto-portal" }
   ],
   "vars": {
