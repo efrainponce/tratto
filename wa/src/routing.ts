@@ -13,6 +13,11 @@ export interface Incoming {
   stored: StoredMedia | null;  // lo que ya quedó en R2 (se llena antes de despachar)
   profileName: string | null;
   timestamp: string | null;
+  /** kind 'location': lo que mandó. `name`/`address` solo vienen si eligió un
+   *  LUGAR del mapa en vez de "mi ubicación actual". */
+  location?: { latitude: number; longitude: number; name: string | null; address: string | null } | null;
+  /** Meta lo marcó como reenviado (`context.forwarded`). */
+  forwarded?: boolean;
   raw: unknown;
 }
 
@@ -220,7 +225,7 @@ export interface EnvioPortal {
   template?: Plantilla | null;
   media?: { filename?: string; mime?: string; base64?: string } | null;
 }
-export interface DispatchResult { status: string; reply: string | null; sends: EnvioPortal[] }
+export interface DispatchResult { status: string; reply: string | null; sends: EnvioPortal[]; pedirUbicacion?: boolean }
 
 /**
  * Reenvía el mensaje al portal del cliente y devuelve lo que ese portal quiera
@@ -293,6 +298,8 @@ export async function dispatchToTenant(
       media,
       timestamp: msg.timestamp,
       profile_name: msg.profileName,
+      location: msg.location ?? null,
+      forwarded: !!msg.forwarded,
     },
     contact: { name: r.contactName, role: r.contactRole, resolved_by: r.resolvedBy },
   });
@@ -318,7 +325,7 @@ export async function dispatchToTenant(
     const detail = await res.text().catch(() => '');
     throw new Error(`portal ${tenant.slug} respondió ${res.status}: ${detail.slice(0, 200)}`);
   }
-  type Cuerpo = { reply?: string; sends?: EnvioPortal[] };
+  type Cuerpo = { reply?: string; sends?: EnvioPortal[]; pedir_ubicacion?: boolean };
   const body = await res.json<Cuerpo>().catch(() => ({} as Cuerpo));
-  return { status: 'ok', reply: body.reply ?? null, sends: Array.isArray(body.sends) ? body.sends : [] };
+  return { status: 'ok', reply: body.reply ?? null, sends: Array.isArray(body.sends) ? body.sends : [], pedirUbicacion: body.pedir_ubicacion === true };
 }

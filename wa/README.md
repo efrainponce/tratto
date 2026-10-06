@@ -105,8 +105,15 @@ Cuando `tenants.inbound_url` está puesto, el gateway hace `POST` ahí:
 }
 ```
 
+Un `kind: "location"` trae además `"location": {"latitude", "longitude", "name", "address"}`
+(`name`/`address` solo si la persona eligió un lugar del mapa en vez de "mi ubicación
+actual"), y todo mensaje trae `"forwarded": true|false` (`context.forwarded` de Meta).
+
 El portal responde `200` con `{"reply": "texto"}` (o `{}` para no contestar), y
-opcionalmente `"sends": [{phone, text, template?, media?}]` — envíos que el gateway
+opcionalmente `"pedir_ubicacion": true`: el `reply` sale entonces como mensaje
+interactivo con el botón **Enviar ubicación** (`location_request_message`; si Meta lo
+rechaza, sale como texto plano). Lo usa la entrada a la obra de la bitácora. Y
+`"sends": [{phone, text, template?, media?}]` — envíos que el gateway
 ejecuta por él después de contestar, con el mismo contrato y candados que
 `/portal/send`. Es la única forma de mandar algo que nace de un mensaje entrante:
 un portal despachado por service binding **no puede llamarnos de regreso** en el

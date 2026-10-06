@@ -8,7 +8,7 @@
 // Cloudflare Access enfrente porque Meta no puede presentar credenciales.
 import type { Env } from './env';
 import { hmacHex, timingSafeEqual } from './crypto';
-import { sendText, markRead, type Plantilla } from './wa';
+import { sendLocationRequest, sendText, markRead, type Plantilla } from './wa';
 import {
   alreadyProcessed, dispatchToTenant, logMessage, logOutbound, resolve, touchThread,
   type DispatchResult, type Incoming,
@@ -55,6 +55,9 @@ interface MetaMessage {
   button?: { text?: string; payload?: string };
   /** Botones de mensajes interactivos (no plantilla). */
   interactive?: { type?: string; button_reply?: { id?: string; title?: string }; list_reply?: { id?: string; title?: string } };
+  /** type 'location' — `name`/`address` solo si eligió un lugar del mapa. */
+  location?: { latitude?: number; longitude?: number; name?: string; address?: string };
+  context?: { forwarded?: boolean; frequently_forwarded?: boolean };
 }
 
 function mediaOf(m: MetaMessage): MediaRef | null {
@@ -100,6 +103,10 @@ function extract(body: MetaBody): Incoming[] {
           stored: null,
           profileName: names.get(m.from) ?? null,
           timestamp: m.timestamp ?? null,
+          location: m.type === 'location' && m.location && Number.isFinite(m.location.latitude) && Number.isFinite(m.location.longitude)
+            ? { latitude: m.location.latitude!, longitude: m.location.longitude!, name: m.location.name ?? null, address: m.location.address ?? null }
+            : null,
+          forwarded: !!(m.context?.forwarded || m.context?.frequently_forwarded),
           raw: m,
         });
       }
@@ -129,6 +136,7 @@ async function processMessage(env: Env, msg: Incoming): Promise<void> {
   let author = 'ack';
   let detail: string | undefined;
   let sends: DispatchResult['sends'] = [];
+  let pedirUbicacion = false;
 
   // El archivo se baja ANTES de despachar: la URL firmada que va en el payload tiene
   // que apuntar a algo que ya existe. Si Meta falla, el mensaje sigue su curso sin
@@ -165,6 +173,7 @@ async function processMessage(env: Env, msg: Incoming): Promise<void> {
       status = d.status;
       reply = d.reply;
       sends = d.sends;
+      pedirUbicacion = !!d.pedirUbicacion;
       author = d.status === 'ok' ? 'agent' : 'ack';
     } catch (err) {
       // El mensaje YA quedó en `messages`; el portal se cayó, no nosotros.
@@ -185,7 +194,17 @@ async function processMessage(env: Env, msg: Incoming): Promise<void> {
 
   if (reply) {
     try {
-      await sendText(env, msg.from, reply);
+      // El portal pidió el botón "Enviar ubicación" (entrada a la obra). Si
+      // Meta lo rechaza, va el mismo texto plano: la persona puede mandar la
+      // ubicación a mano (clip → Ubicación).
+      if (pedirUbicacion) {
+        await sendLocationRequest(env, msg.from, reply).catch(async (err) => {
+          console.error('location_request', err);
+          await sendText(env, msg.from, reply!);
+        });
+      } else {
+        await sendText(env, msg.from, reply);
+      }
       await logOutbound(env, {
         phone10: r.phone10, to: msg.from, tenantSlug: r.tenant?.slug ?? null,
         body: reply, author,

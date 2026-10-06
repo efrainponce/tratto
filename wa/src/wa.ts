@@ -41,6 +41,17 @@ export async function sendText(env: Env, to: string, body: string): Promise<void
   await graphPost(env, { to: normalizeMxTo(to), type: 'text', text: { body: body.slice(0, 4000) } });
 }
 
+/** Texto con el botón "Enviar ubicación" (mensaje interactivo
+ *  `location_request_message`): un toque y la persona manda su ubicación
+ *  actual, que llega como un mensaje `location` normal. Solo dentro de la
+ *  ventana de 24 h, como cualquier texto libre. Cuerpo máx. 1024. */
+export async function sendLocationRequest(env: Env, to: string, body: string): Promise<void> {
+  await graphPost(env, {
+    recipient_type: 'individual', to: normalizeMxTo(to), type: 'interactive',
+    interactive: { type: 'location_request_message', body: { text: body.slice(0, 1024) }, action: { name: 'send_location' } },
+  });
+}
+
 /**
  * Plantilla aprobada por Meta: la única forma de escribirle a alguien fuera de
  * la ventana de 24 h. `body` son los {{n}} del cuerpo en orden; `urlSuffix` el
